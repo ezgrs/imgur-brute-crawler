@@ -169,38 +169,3 @@ If you want to download a random set of images and save it to Google Cloud Stora
 ```shell
 poetry run python -m imgurbc.scripts.crawler --gcloud-storage-bucket-name my-bucket
 ```
-
-
-### Google Cloud
-
-1. If you already have a service account, skip to step 3.
-
-2. Create a service account to upload the images to the specified bucket:
-
-```shell
-gcloud iam service-accounts create SERVICE_ACCOUNT_NAME
-```
-
-3. If your service account already has storage permissions, skip to step 5.
-
-4. Give the service account permission to upload images to the bucket:
-
-```shell
-gcloud projects add-iam-policy-binding YOUR_PROJECT_ID \
-  --member="serviceAccount:SERVICE_ACCOUNT_NAME@YOUR_PROJECT_ID.iam.gserviceaccount.com" \
-  --role="roles/storage.admin"
-```
-
-5. Deploy the API to Google Cloud Run:
-
-```shell
-gcloud run deploy CLOUD_FUNCTION_NAME \
-  --source . \
-  --region us-east1 \
-  --allow-unauthenticated \
-  --service-account=SERVICE_ACCOUNT_NAME@YOUR_PROJECT_ID.iam.gserviceaccount.com
-```
-
-This will deploy a FastAPI application with a single endpoint, `POST /imgur`, which receives
-a `imgur_id` in its body and saves it to Google Cloud Storage if it exists. It always returns
-_200 OK_.
