@@ -1,4 +1,4 @@
-# imgur-brute-crawler
+# imgurdex
 
 A lightweight asynchronous crawler that fetches resources from Imgur, processes them through a pluggable architecture, and stores results locally or in Google Cloud Storage.
 
@@ -58,16 +58,24 @@ An abstract service responsible for providing a stream of IDs to crawl.
 
 > Implementations may include generating random IDs, reading from a file or from a in-memory iterator.
 
----
+```mermaid
+sequenceDiagram
+    participant It as IdIterator
+    participant D as Downloader
+    participant C as Consumer
 
-The general execution flow is:
+    loop Until iterator exhausted
+        It->>D: yield id
+        D->>D: download(id)
+        alt Resource exists
+            D->>C: consume_hit(resource)
+        else Resource missing
+            D->>C: consume_miss(id)
+        end
+    end
 
-1. `IdIterator` yields an `id`
-2. `Downloader.download(id)` is called
-3. If resource exists, `Consumer.consume_hit(resource)`
-4. If resource does not exist, `Consumer.consume_miss(id)`
-5. Repeat until iterator is exhausted
-6. Close iterator
+    It->>It: close()
+```
 
 ## Installation
 
@@ -76,56 +84,14 @@ It's recommended to have [Poetry](https://python-poetry.org) in your machine.
 1. Clone the repository:
 
 ```shell
-git clone https://github.com/ezgrs/imgur-brute-crawler
-cd imgur-brute-crawler
+git clone https://github.com/ezgrs/imgurdex
+cd imgurdex
 ```
 
 2. Install the dependencies:
 
 ```shell
 poetry install
-```
-
-3. If you don't plan to use Google Cloud Storage, skip to step 8.
-
-4. Check if you have the [Google Cloud SDK](https://docs.cloud.google.com/sdk/docs/install-sdk) installed:
-
-```shell
-gcloud --version
-```
-```no-lang
-Google Cloud SDK 565.0.0
-beta 2026.04.10
-bq 2.1.31
-core 2026.04.10
-gcloud-crc32c 1.0.0
-gsutil 5.3
-```
-
-5. Log in into your Google Cloud account:
-
-```shell
-gcloud auth login
-```
-
-This command will first open your browser to the sign-in page where you complete authentication.
-
-Then it'll show your current list of projects: choose which one you would like to use its Storage.
-
-> Running this will allow **you** to run `gcloud` commands from your terminal, finding your credentials automatically.
-
-6. Create your Application Default Credentials (ADC) file:
-
-```shell
-gcloud auth application-default login
-```
-
-> Running this will allow **your SDK library** to run the SDK code, finding your credentials automatically.
-
-7. If your project is not already set for some reason, you can do so by running:
-
-```shell
-gcloud config set project YOUR_PROJECT_ID
 ```
 
 ## Usage
