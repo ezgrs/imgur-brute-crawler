@@ -1,7 +1,7 @@
 import aiopath
 
-from imgurbc.domain.interfaces.consumer import Consumer
-from imgurbc.domain.models.resource import Resource
+from imgurdex.domain.interfaces.consumer import Consumer
+from imgurdex.domain.models.resource import Resource
 
 
 class StoreAsLocalFileConsumer(Consumer):

@@ -8,26 +8,26 @@ import aiopath
 import httpx
 import pydantic
 
-from imgurbc.domain.interfaces.consumer import Consumer
-from imgurbc.domain.interfaces.id_iterator import IdIterator
-from imgurbc.infrastructure.services.consumer.combiner import CombinerConsumer
-from imgurbc.infrastructure.services.consumer.output_to_stream import (
+from imgurdex.domain.interfaces.consumer import Consumer
+from imgurdex.domain.interfaces.id_iterator import IdIterator
+from imgurdex.infrastructure.services.consumer.combiner import CombinerConsumer
+from imgurdex.infrastructure.services.consumer.output_to_stream import (
     OutputToStreamConsumer,
 )
-from imgurbc.infrastructure.services.consumer.store_as_local_file import (
+from imgurdex.infrastructure.services.consumer.store_as_local_file import (
     StoreAsLocalFileConsumer,
 )
-from imgurbc.infrastructure.services.consumer.upload_to_gcloud import (
+from imgurdex.infrastructure.services.consumer.upload_to_gcloud import (
     UploadToGoogleCloudStorageConsumer,
 )
-from imgurbc.infrastructure.services.downloader.httpx_impl import (
+from imgurdex.infrastructure.services.downloader.httpx_impl import (
     HttpxDownloader,
 )
-from imgurbc.infrastructure.services.id_iterator.combiner import (
+from imgurdex.infrastructure.services.id_iterator.combiner import (
     CombinerIdIterator,
 )
-from imgurbc.infrastructure.services.id_iterator.memory import MemoryIdIterator
-from imgurbc.infrastructure.services.id_iterator.random_impl import (
+from imgurdex.infrastructure.services.id_iterator.memory import MemoryIdIterator
+from imgurdex.infrastructure.services.id_iterator.random_impl import (
     RandomIdIterator,
 )
 

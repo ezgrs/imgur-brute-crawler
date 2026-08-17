@@ -1,8 +1,8 @@
 import httpx
 import http.client
 
-from imgurbc.domain.interfaces.downloader import Downloader
-from imgurbc.domain.models.resource import Resource
+from imgurdex.domain.interfaces.downloader import Downloader
+from imgurdex.domain.models.resource import Resource
 
 
 class HttpxDownloader(Downloader):

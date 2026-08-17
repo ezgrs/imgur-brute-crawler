@@ -101,7 +101,7 @@ poetry install
 The crawler is configured via CLI arguments:
 
 ```shell
-poetry run python -m imgurbc.scripts.crawler
+poetry run python -m imgurdex.scripts.crawler
 ```
 
 | Flag                               | Description                                          |
@@ -127,11 +127,11 @@ Note that
 If you want to download a known set of images and save it to the `output` directory:
 
 ```shell
-poetry run python -m imgurbc.scripts.crawler -i dzgsGOW ogHxQ5Y cGV1iV5 -o ./output
+poetry run python -m imgurdex.scripts.crawler -i dzgsGOW ogHxQ5Y cGV1iV5 -o ./output
 ```
 
 If you want to download a random set of images and save it to Google Cloud Storage:
 
 ```shell
-poetry run python -m imgurbc.scripts.crawler --gcloud-storage-bucket-name my-bucket
+poetry run python -m imgurdex.scripts.crawler --gcloud-storage-bucket-name my-bucket
 ```

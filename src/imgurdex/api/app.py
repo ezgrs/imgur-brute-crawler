@@ -10,19 +10,19 @@ import httpx
 import google.cloud.storage
 import google.api_core.exceptions
 
-from imgurbc.domain.interfaces.consumer import Consumer
-from imgurbc.domain.interfaces.id_iterator import IdIterator
-from imgurbc.infrastructure.services.consumer.combiner import CombinerConsumer
-from imgurbc.infrastructure.services.consumer.send_email import (
+from imgurdex.domain.interfaces.consumer import Consumer
+from imgurdex.domain.interfaces.id_iterator import IdIterator
+from imgurdex.infrastructure.services.consumer.combiner import CombinerConsumer
+from imgurdex.infrastructure.services.consumer.send_email import (
     SendEmailConsumer,
 )
-from imgurbc.infrastructure.services.consumer.upload_to_gcloud import (
+from imgurdex.infrastructure.services.consumer.upload_to_gcloud import (
     UploadToGoogleCloudStorageConsumer,
 )
-from imgurbc.infrastructure.services.downloader.httpx_impl import (
+from imgurdex.infrastructure.services.downloader.httpx_impl import (
     HttpxDownloader,
 )
-from imgurbc.infrastructure.services.id_iterator.random_impl import (
+from imgurdex.infrastructure.services.id_iterator.random_impl import (
     RandomIdIterator,
 )
 

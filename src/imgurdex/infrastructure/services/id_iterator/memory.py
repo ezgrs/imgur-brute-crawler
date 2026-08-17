@@ -2,7 +2,7 @@ import random
 import string
 import typing
 
-from imgurbc.domain.interfaces.id_iterator import IdIterator
+from imgurdex.domain.interfaces.id_iterator import IdIterator
 
 
 class MemoryIdIterator(IdIterator):

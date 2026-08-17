@@ -1,5 +1,5 @@
 [project]
-name = "imgurbc"
+name = "imgurdex"
 version = "0.1.0"
 description = ""
 authors = [
@@ -19,7 +19,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "imgurbc", from = "src"}]
+packages = [{include = "imgurdex", from = "src"}]
 
 
 [tool.poetry.group.dev.dependencies]

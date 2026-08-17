@@ -1,6 +1,6 @@
 import abc
 
-from imgurbc.domain.models.resource import Resource
+from imgurdex.domain.models.resource import Resource
 
 
 class Consumer(abc.ABC):
