@@ -68,6 +68,18 @@ services:
     env_file:
       - .env
 
+  crontab:
+    build:
+      context: scheduler
+      dockerfile: Dockerfile
+    container_name: crontab
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
 volumes:
   minio_data:
   postgres_data:
