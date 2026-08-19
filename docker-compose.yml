@@ -70,7 +70,7 @@ services:
 
   crontab:
     build:
-      context: scheduler
+      context: scheduler-provider
       dockerfile: Dockerfile
     container_name: crontab
     init: true
