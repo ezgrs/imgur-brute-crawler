@@ -1,0 +1,2 @@
+- S3 API: http://localhost:9000
+- MinIO Console: http://localhost:9001
