@@ -20,7 +20,7 @@ fun main() {
                 },
                 {},
             )
-            readln()
+            Thread.currentThread().join()
         }
     }
 }
