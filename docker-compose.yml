@@ -81,6 +81,19 @@ services:
     env_file:
       - .env
 
+  mail-consumer:
+    build:
+      context: mail-consumer
+      dockerfile: Dockerfile
+    container_name: mail-consumer
+    init: true
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
 volumes:
   minio_data:
   postgres_data:
