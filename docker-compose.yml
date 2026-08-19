@@ -73,6 +73,7 @@ services:
       context: scheduler
       dockerfile: Dockerfile
     container_name: crontab
+    init: true
     depends_on:
       rabbitmq:
         condition: service_healthy
