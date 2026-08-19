@@ -7,6 +7,7 @@ import faststream
 import faststream.rabbit
 import httpx
 import pydantic
+import pydantic_settings
 
 from broker.application.ports.imgur import Imgur
 from broker.application.ports.storage import Storage
@@ -26,6 +27,14 @@ class ImageSaved(pydantic.BaseModel):
     image_id: str
 
 
+class Settings(pydantic_settings.BaseSettings):
+    minio_root_username: str
+    minio_root_password: str
+
+    rabbitmq_root_username: str
+    rabbitmq_root_password: str
+
+
 async def _initialize_imgur(exit_stack: contextlib.AsyncExitStack) -> Imgur:
     http_client = await exit_stack.enter_async_context(
         httpx.AsyncClient(
@@ -35,16 +44,18 @@ async def _initialize_imgur(exit_stack: contextlib.AsyncExitStack) -> Imgur:
     return HttpxImgur(client=http_client)
 
 
-async def _initialize_storage(exit_stack: contextlib.AsyncExitStack) -> Storage:
+async def _initialize_storage(
+    exit_stack: contextlib.AsyncExitStack, settings: Settings
+) -> Storage:
     s3_session = aioboto3.Session()
     s3_client = await exit_stack.enter_async_context(
         typing.cast(
             contextlib.AbstractAsyncContextManager,
             s3_session.client(
                 "s3",
-                endpoint_url="http://localhost:9000",
-                aws_access_key_id="root",
-                aws_secret_access_key="Nz4TwFPN3MC3aC63TVbS",
+                endpoint_url="http://minio:9000",
+                aws_access_key_id=settings.minio_root_username,
+                aws_secret_access_key=settings.minio_root_password,
                 region_name="us-east-1",
             ),
         )
@@ -65,10 +76,17 @@ async def _initialize_storage(exit_stack: contextlib.AsyncExitStack) -> Storage:
 
 
 def create_app() -> faststream.FastStream:
+    settings = Settings()  # pyright: ignore[reportCallIssue]
+
     exit_stack = contextlib.AsyncExitStack()
 
     broker = faststream.rabbit.RabbitBroker(
-        url="amqp://root:root@localhost:5672",
+        url=(
+            "amqp://"
+            f"{settings.rabbitmq_root_username}:"
+            f"{settings.rabbitmq_root_password}@"
+            "rabbitmq:5672"
+        ),
     )
     app = faststream.FastStream(broker)
     exchange = faststream.rabbit.RabbitExchange("events")
@@ -82,7 +100,7 @@ def create_app() -> faststream.FastStream:
         imgur = await _initialize_imgur(exit_stack)
 
         nonlocal storage
-        storage = await _initialize_storage(exit_stack)
+        storage = await _initialize_storage(exit_stack, settings)
 
     @broker.subscriber("image.requested", exchange=exchange)
     async def download_image(event: ImageRequested) -> None:
