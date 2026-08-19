@@ -13,8 +13,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o scheduler .
 # Step 2
 FROM alpine:3.22
 
+RUN apk add --no-cache dcron
+
 WORKDIR /app
 
 COPY --from=builder /app/scheduler .
+RUN echo '* * * * * /app/scheduler > /proc/1/fd/1 2>&1' > /etc/crontabs/root
 
-CMD ["./scheduler"]
+CMD ["crond", "-f", "-l", "2"]
