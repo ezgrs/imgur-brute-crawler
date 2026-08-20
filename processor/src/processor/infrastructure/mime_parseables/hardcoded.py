@@ -1,6 +1,6 @@
 import dataclasses
 
-from broker.application.ports.mime_parser import MimeParseable
+from processor.application.ports.mime_parser import MimeParseable
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)

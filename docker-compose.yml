@@ -54,23 +54,11 @@ services:
       retries: 10
       start_period: 10s
 
-  faststream:
+  image-scheduler:
     build:
-      context: broker
+      context: scheduler
       dockerfile: Dockerfile
-    container_name: faststream
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-    env_file:
-      - .env
-
-  crontab:
-    build:
-      context: scheduler-provider
-      dockerfile: Dockerfile
-    container_name: crontab
+    container_name: scheduler-service
     init: true
     depends_on:
       rabbitmq:
@@ -79,11 +67,23 @@ services:
     env_file:
       - .env
 
-  mail-consumer:
+  image-processor:
     build:
-      context: mail-consumer
+      context: processor
       dockerfile: Dockerfile
-    container_name: mail-consumer
+    container_name: processor-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
+  image-notifier:
+    build:
+      context: notifier
+      dockerfile: Dockerfile
+    container_name: notifier-service
     init: true
     depends_on:
       rabbitmq:

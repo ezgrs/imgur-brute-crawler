@@ -1,9 +1,9 @@
 import dataclasses
 
-from broker.application.ports.storage import Storage
 import botocore.client
 
-from broker.infrastructure.mime_parseables.hardcoded import (
+from processor.application.ports.storage import Storage
+from processor.infrastructure.mime_parseables.hardcoded import (
     HardcodedMimeParseable,
 )
 

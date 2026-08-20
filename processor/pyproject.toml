@@ -1,5 +1,5 @@
 [project]
-name = "broker"
+name = "processor"
 version = "0.1.0"
 description = ""
 authors = [
@@ -17,7 +17,7 @@ dependencies = [
 ]
 
 [tool.poetry]
-packages = [{include = "broker", from = "src"}]
+packages = [{include = "processor", from = "src"}]
 
 [tool.poetry.group.dev.dependencies]
 black = "^26.5.1"

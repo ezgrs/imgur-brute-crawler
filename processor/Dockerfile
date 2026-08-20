@@ -34,4 +34,4 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["faststream", "run", "--factory", "broker.interfaces.faststream:create_app"]
+CMD ["faststream", "run", "--factory", "processor.interfaces.faststream:create_app"]

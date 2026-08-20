@@ -3,7 +3,7 @@ import http.client
 
 import httpx
 
-from broker.application.ports.imgur import Imgur
+from processor.application.ports.imgur import Imgur
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)

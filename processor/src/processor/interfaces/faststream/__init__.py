@@ -9,10 +9,10 @@ import httpx
 import pydantic
 import pydantic_settings
 
-from broker.application.ports.imgur import Imgur
-from broker.application.ports.storage import Storage
-from broker.infrastructure.imgurs.httpx_impl import HttpxImgur
-from broker.infrastructure.storages.minio_impl import S3Storage
+from processor.application.ports.imgur import Imgur
+from processor.application.ports.storage import Storage
+from processor.infrastructure.imgurs.httpx_impl import HttpxImgur
+from processor.infrastructure.storages.minio_impl import S3Storage
 
 
 class ImageRequested(pydantic.BaseModel):

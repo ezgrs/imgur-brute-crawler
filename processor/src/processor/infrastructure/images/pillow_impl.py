@@ -2,11 +2,11 @@ import asyncio
 import dataclasses
 import io
 
-from broker.application.ports.image import Image
 import PIL.Image
 import PIL.ImageOps
 
-from broker.application.ports.mime_parser import MimeParseable
+from processor.application.ports.image import Image
+from processor.application.ports.mime_parser import MimeParseable
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)
