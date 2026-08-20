@@ -5,22 +5,11 @@ import aioboto3
 import botocore.exceptions
 import faststream
 import faststream.rabbit
-import httpx
 import pydantic
 import pydantic_settings
 
-from processor.application.ports.imgur import Imgur
 from processor.application.ports.storage import Storage
-from processor.infrastructure.imgurs.httpx_impl import HttpxImgur
 from processor.infrastructure.storages.minio_impl import S3Storage
-
-
-class ImageRequested(pydantic.BaseModel):
-    image_id: str
-
-
-class ImageSaveFailed(pydantic.BaseModel):
-    image_id: str
 
 
 class ImageSaved(pydantic.BaseModel):
@@ -33,15 +22,6 @@ class Settings(pydantic_settings.BaseSettings):
 
     rabbitmq_root_username: str
     rabbitmq_root_password: str
-
-
-async def _initialize_imgur(exit_stack: contextlib.AsyncExitStack) -> Imgur:
-    http_client = await exit_stack.enter_async_context(
-        httpx.AsyncClient(
-            base_url=httpx.URL(scheme="https", host="i.imgur.com"),
-        )
-    )
-    return HttpxImgur(client=http_client)
 
 
 async def _initialize_storage(
@@ -89,73 +69,22 @@ def create_app() -> faststream.FastStream:
         ),
     )
     app = faststream.FastStream(broker)
-    exchange = faststream.rabbit.RabbitExchange("events", declare=False)
-    image_requested_queue = faststream.rabbit.RabbitQueue(
-        "image.requested", declare=False
-    )
     image_saved_queue = faststream.rabbit.RabbitQueue(
         "image.saved", declare=False
     )
-    image_save_failed_queue = faststream.rabbit.RabbitQueue(
-        "image.save_failed", declare=False
-    )
 
-    imgur: Imgur
     storage: Storage
 
     @app.after_startup
     async def on_startup():
-        nonlocal imgur
-        imgur = await _initialize_imgur(exit_stack)
-
         nonlocal storage
         storage = await _initialize_storage(exit_stack, settings)
 
-    @broker.subscriber(queue=image_requested_queue, exchange=exchange)
-    async def download_image(event: ImageRequested) -> None:
-        image_id = event.image_id
-        try:
-            contents = await imgur.download_image(image_id)
-        except Exception:
-            await broker.publish(
-                queue=image_save_failed_queue,
-                exchange=exchange,
-                message=ImageSaveFailed(image_id=event.image_id),
-            )
-            return
+    @broker.subscriber(queue=image_saved_queue)
+    async def persist_metadata(_: ImageSaved) -> None: ...
 
-        if contents is None:
-            await broker.publish(
-                queue=image_save_failed_queue,
-                exchange=exchange,
-                message=ImageSaveFailed(image_id=event.image_id),
-            )
-            return
-
-        try:
-            await storage.upload_image(event.image_id, contents=contents)
-        except Exception:
-            await broker.publish(
-                queue=image_save_failed_queue,
-                exchange=exchange,
-                message=ImageSaveFailed(image_id=event.image_id),
-            )
-            return
-
-        await broker.publish(
-            queue=image_saved_queue,
-            exchange=exchange,
-            message=ImageSaved(image_id="0mtwnhm"),
-        )
-
-    @broker.subscriber(queue=image_saved_queue, exchange=exchange)
-    async def persist_metadata(event: ImageSaved) -> None: ...
-
-    @broker.subscriber(queue=image_saved_queue, exchange=exchange)
-    async def persist_thumbnail(event: ImageSaved) -> None: ...
-
-    @broker.subscriber(queue=image_saved_queue, exchange=exchange)
-    async def notify_email(event: ImageSaved) -> None: ...
+    @broker.subscriber(queue=image_saved_queue)
+    async def persist_thumbnail(_: ImageSaved) -> None: ...
 
     @app.after_shutdown
     async def on_shutdown() -> None:
