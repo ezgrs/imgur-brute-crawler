@@ -67,6 +67,18 @@ services:
     env_file:
       - .env
 
+  image-fetcher:
+    build:
+      context: fetcher
+      dockerfile: Dockerfile
+    container_name: fetcher-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
   image-processor:
     build:
       context: processor
