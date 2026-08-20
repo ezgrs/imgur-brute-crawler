@@ -38,13 +38,13 @@
       "auto_delete": false
     },
     {
-      "name": "image.saved",
+      "name": "image.saved.processor",
       "vhost": "/",
       "durable": true,
       "auto_delete": false
     },
     {
-      "name": "image.save_failed",
+      "name": "image.saved.notifier",
       "vhost": "/",
       "durable": true,
       "auto_delete": false
@@ -61,16 +61,16 @@
     {
       "source": "events",
       "vhost": "/",
-      "destination": "image.saved",
+      "destination": "image.saved.processor",
       "destination_type": "queue",
       "routing_key": "image.saved"
     },
     {
       "source": "events",
       "vhost": "/",
-      "destination": "image.save_failed",
+      "destination": "image.saved.notifier",
       "destination_type": "queue",
-      "routing_key": "image.save_failed"
+      "routing_key": "image.saved"
     }
   ]
 }
