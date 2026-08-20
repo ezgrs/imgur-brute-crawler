@@ -13,7 +13,7 @@ fun main() {
     f.newConnection().use { c ->
         c.createChannel().use { ch ->
             ch.basicConsume(
-                "image.saved",
+                "image.saved.notifier",
                 true,
                 { _, m ->
                     println(String(m.body))
