@@ -1,4 +1,7 @@
-use lapin::{Connection, ConnectionProperties, options::*, types::FieldTable};
+use lapin::{
+    BasicProperties, Connection, ConnectionProperties, options::BasicPublishOptions, options::*,
+    types::FieldTable,
+};
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 use std::env;
@@ -31,6 +34,25 @@ async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> 
     Ok(Some(bytes.to_vec()))
 }
 
+async fn publish_image_saved(channel: &lapin::Channel, image_id: &str) -> Result<(), lapin::Error> {
+    let payload = serde_json::json!({
+        "image_id": image_id,
+    });
+
+    channel
+        .basic_publish(
+            "events",
+            "image.saved",
+            BasicPublishOptions::default(),
+            payload.to_string().as_bytes(),
+            BasicProperties::default().with_content_type("application/json".into()),
+        )
+        .await?
+        .await?;
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let username = env::var("RABBITMQ_ROOT_USERNAME")?;
@@ -55,8 +77,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let message = parse_message(&delivery.data)?;
         match fetch_image(&message.image_id).await? {
-            Some(image) => println!("Recebi {} bytes", image.len()),
-            None => println!("Imagem não encontrada"),
+            Some(_) => publish_image_saved(&channel, &message.image_id).await?,
+            None => {}
         }
 
         delivery.ack(BasicAckOptions::default()).await?;
