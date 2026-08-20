@@ -1,0 +1,76 @@
+{
+  "users": [
+    {
+      "name": "root",
+      "password_hash": "Ehf0WDK4CHqgkEuRwHfubECj+Po3UJCvDNwMjsVVOrunalw2",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": "administrator"
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "root",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    }    
+  ],
+  "exchanges": [
+    {
+      "name": "events",
+      "vhost": "/",
+      "type": "topic",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "queues": [
+    {
+      "name": "image.requested",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "image.saved",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
+      "name": "image.save_failed",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    }
+  ],
+  "bindings": [
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "image.requested",
+      "destination_type": "queue",
+      "routing_key": "image.requested"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "image.saved",
+      "destination_type": "queue",
+      "routing_key": "image.saved"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "image.save_failed",
+      "destination_type": "queue",
+      "routing_key": "image.save_failed"
+    }
+  ]
+}

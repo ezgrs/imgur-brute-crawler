@@ -42,12 +42,10 @@ services:
       - "${DOCKER_RABBITMQ_PORT:-5672}:5672"
       - "${DOCKER_RABBITMQ_CONSOLE_PORT:-15672}:15672"
 
-    environment:
-      RABBITMQ_DEFAULT_USER: ${RABBITMQ_ROOT_USERNAME}
-      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_ROOT_PASSWORD}
-
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
+      - ./assets/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./assets/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
 
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
