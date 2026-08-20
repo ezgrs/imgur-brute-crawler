@@ -89,7 +89,16 @@ def create_app() -> faststream.FastStream:
         ),
     )
     app = faststream.FastStream(broker)
-    exchange = faststream.rabbit.RabbitExchange("events")
+    exchange = faststream.rabbit.RabbitExchange("events", declare=False)
+    image_requested_queue = faststream.rabbit.RabbitQueue(
+        "image.requested", declare=False
+    )
+    image_saved_queue = faststream.rabbit.RabbitQueue(
+        "image.saved", declare=False
+    )
+    image_save_failed_queue = faststream.rabbit.RabbitQueue(
+        "image.save_failed", declare=False
+    )
 
     imgur: Imgur
     storage: Storage
@@ -102,23 +111,23 @@ def create_app() -> faststream.FastStream:
         nonlocal storage
         storage = await _initialize_storage(exit_stack, settings)
 
-    @broker.subscriber("image.requested", exchange=exchange)
+    @broker.subscriber(queue=image_requested_queue, exchange=exchange)
     async def download_image(event: ImageRequested) -> None:
         image_id = event.image_id
         try:
             contents = await imgur.download_image(image_id)
         except Exception:
             await broker.publish(
+                queue=image_save_failed_queue,
                 exchange=exchange,
-                routing_key="image.save_failed",
                 message=ImageSaveFailed(image_id=event.image_id),
             )
             return
 
         if contents is None:
             await broker.publish(
+                queue=image_save_failed_queue,
                 exchange=exchange,
-                routing_key="image.save_failed",
                 message=ImageSaveFailed(image_id=event.image_id),
             )
             return
@@ -127,25 +136,25 @@ def create_app() -> faststream.FastStream:
             await storage.upload_image(event.image_id, contents=contents)
         except Exception:
             await broker.publish(
+                queue=image_save_failed_queue,
                 exchange=exchange,
-                routing_key="image.save_failed",
                 message=ImageSaveFailed(image_id=event.image_id),
             )
             return
 
         await broker.publish(
+            queue=image_saved_queue,
             exchange=exchange,
-            routing_key="image.saved",
             message=ImageSaved(image_id="0mtwnhm"),
         )
 
-    @broker.subscriber("image.saved", exchange=exchange)
+    @broker.subscriber(queue=image_saved_queue, exchange=exchange)
     async def persist_metadata(event: ImageSaved) -> None: ...
 
-    @broker.subscriber("image.saved", exchange=exchange)
+    @broker.subscriber(queue=image_saved_queue, exchange=exchange)
     async def persist_thumbnail(event: ImageSaved) -> None: ...
 
-    @broker.subscriber("image.saved", exchange=exchange)
+    @broker.subscriber(queue=image_saved_queue, exchange=exchange)
     async def notify_email(event: ImageSaved) -> None: ...
 
     @app.after_shutdown
