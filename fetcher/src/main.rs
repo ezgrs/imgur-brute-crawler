@@ -41,8 +41,8 @@ async fn publish_image_saved(channel: &lapin::Channel, image_id: &str) -> Result
 
     channel
         .basic_publish(
-            "events",
-            "image.saved",
+            "events".into(),
+            "image.saved".into(),
             BasicPublishOptions::default(),
             payload.to_string().as_bytes(),
             BasicProperties::default().with_content_type("application/json".into()),
