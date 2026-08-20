@@ -70,7 +70,7 @@ def create_app() -> faststream.FastStream:
     )
     app = faststream.FastStream(broker)
     image_saved_queue = faststream.rabbit.RabbitQueue(
-        "image.saved", declare=False
+        "image.saved.processor", declare=False
     )
 
     storage: Storage
@@ -81,10 +81,9 @@ def create_app() -> faststream.FastStream:
         storage = await _initialize_storage(exit_stack, settings)
 
     @broker.subscriber(queue=image_saved_queue)
-    async def persist_metadata(_: ImageSaved) -> None: ...
-
-    @broker.subscriber(queue=image_saved_queue)
-    async def persist_thumbnail(_: ImageSaved) -> None: ...
+    async def on_image_saved(event: ImageSaved) -> None:
+        print("persist_metadata", event.image_id)
+        print("persist_thumbnail", event.image_id)
 
     @app.after_shutdown
     async def on_shutdown() -> None:
