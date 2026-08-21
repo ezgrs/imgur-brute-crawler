@@ -121,8 +121,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let delivery = delivery?;
 
         let message = parse_message(&delivery.data)?;
-        match fetch_image(&message.image_id).await? {
-            Some(_) => publish_image_saved(&rabbitmq, &message.image_id).await?,
+        let image_id = message.image_id;
+        match fetch_image(&image_id).await? {
+            Some(bytes) => {
+                s3.put_object()
+                    .bucket("images")
+                    .key(&image_id)
+                    .body(bytes.into())
+                    .send()
+                    .await?;
+
+                publish_image_saved(&rabbitmq, &image_id).await?;
+            }
             None => {}
         }
 
