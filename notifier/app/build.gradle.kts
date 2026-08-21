@@ -12,6 +12,7 @@ repositories {
 dependencies {
     implementation("com.rabbitmq:amqp-client:5.27.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.20.0")
+    implementation("org.eclipse.angus:angus-mail:2.0.4")
 }
 
 java {
