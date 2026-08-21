@@ -59,7 +59,7 @@ async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> 
 
     let response = client
         .get(format!("https://i.imgur.com/{image_id}.png"))
-        .header("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+        .header("accept", "image/avif,image/webp,image/apng,*/*")
         .header("accept-encoding", "gzip, deflate, br, zstd")
         .header("accept-language", "pt-BR,pt;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6")
         .header("cache-control", "no-cache")
