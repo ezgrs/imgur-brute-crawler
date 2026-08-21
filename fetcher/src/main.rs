@@ -35,6 +35,19 @@ async fn create_s3_client(username: &str, password: &str) -> aws_sdk_s3::Client 
     aws_sdk_s3::Client::from_conf(s3_config)
 }
 
+async fn ensure_s3_bucket(
+    s3: &aws_sdk_s3::Client,
+    bucket: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if s3.head_bucket().bucket(bucket).send().await.is_ok() {
+        return Ok(());
+    }
+
+    s3.create_bucket().bucket(bucket).send().await?;
+
+    Ok(())
+}
+
 fn parse_message(data: &[u8]) -> Result<ImageMessage, serde_json::Error> {
     serde_json::from_slice(data)
 }
@@ -87,11 +100,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await?;
 
-    let _s3 = create_s3_client(
+    let s3 = create_s3_client(
         &std::env::var("MINIO_ROOT_USERNAME")?,
         &std::env::var("MINIO_ROOT_PASSWORD")?,
     )
     .await;
+
+    ensure_s3_bucket(&s3, "images").await?;
 
     let mut consumer = rabbitmq
         .basic_consume(
