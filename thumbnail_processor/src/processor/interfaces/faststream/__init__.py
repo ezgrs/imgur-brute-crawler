@@ -2,6 +2,7 @@ import contextlib
 import typing
 
 import aioboto3
+import botocore.exceptions
 import faststream
 import faststream.rabbit
 import pydantic
@@ -39,6 +40,18 @@ async def _initialize_storage(
             ),
         )
     )
+
+    # Create initial buckets
+    for bucket_name in ("thumbnails",):
+        try:
+            await s3_client.head_bucket(Bucket=bucket_name)
+        except botocore.exceptions.ClientError as e:
+            match e.response.get("Error"):
+                case {"Code": "404", "Message": "Not Found"}:
+                    await s3_client.create_bucket(Bucket=bucket_name)
+                case _:
+                    raise
+
     return S3Storage(client=s3_client)
 
 
