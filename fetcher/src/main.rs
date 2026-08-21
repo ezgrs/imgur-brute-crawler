@@ -2,7 +2,6 @@ use lapin::{
     BasicProperties, Connection, ConnectionProperties, options::BasicPublishOptions, options::*,
     types::FieldTable,
 };
-use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 use std::env;
 use tokio_stream::StreamExt;
@@ -34,7 +33,7 @@ fn parse_message(data: &[u8]) -> Result<ImageMessage, serde_json::Error> {
 }
 
 async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> {
-    let client = Client::builder()
+    let client = reqwest::Client::builder()
         .redirect(reqwest::redirect::Policy::none())
         .build()?;
 
@@ -42,7 +41,7 @@ async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> 
 
     let response = client.get(url).send().await?;
 
-    if response.status() == StatusCode::FOUND {
+    if response.status() == reqwest::StatusCode::FOUND {
         return Ok(None);
     }
 
