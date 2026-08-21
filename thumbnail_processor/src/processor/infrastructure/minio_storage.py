@@ -9,17 +9,17 @@ from processor.application.ports.storage import Storage
 class S3Storage(Storage):
     client: botocore.client.BaseClient
 
-    async def upload_image(self, id: str, contents: bytes) -> None:
+    async def upload_image(self, bucket: str, id: str, contents: bytes) -> None:
         await self.client.put_object(
-            Bucket="images",
+            Bucket=bucket,
             Key=id,
             Body=contents,
             ContentType="image/png",
         )
 
-    async def download_image(self, id: str) -> bytes:
+    async def download_image(self, bucket: str, id: str) -> bytes:
         response = await self.client.get_object(
-            Bucket="images",
+            Bucket=bucket,
             Key=id,
         )
 
