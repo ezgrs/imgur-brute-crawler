@@ -12,6 +12,23 @@ struct ImageMessage {
     image_id: String,
 }
 
+async fn create_s3_client(username: &str, password: &str) -> aws_sdk_s3::Client {
+    let credentials = aws_sdk_s3::config::Credentials::new(username, password, None, None, "minio");
+
+    let sdk_config = aws_config::defaults(aws_config::BehaviorVersion::latest())
+        .region(aws_sdk_s3::config::Region::new("us-east-1"))
+        .credentials_provider(credentials)
+        .load()
+        .await;
+
+    let s3_config = aws_sdk_s3::config::Builder::from(&sdk_config)
+        .endpoint_url("http://minio:9000")
+        .force_path_style(true)
+        .build();
+
+    aws_sdk_s3::Client::from_conf(s3_config)
+}
+
 fn parse_message(data: &[u8]) -> Result<ImageMessage, serde_json::Error> {
     serde_json::from_slice(data)
 }
@@ -62,6 +79,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let connection = Connection::connect(&addr, ConnectionProperties::default()).await?;
 
     let channel = connection.create_channel().await?;
+
+    let _s3 = create_s3_client(
+        &env::var("MINIO_ROOT_USERNAME")?,
+        &env::var("MINIO_ROOT_PASSWORD")?,
+    )
+    .await;
 
     let mut consumer = channel
         .basic_consume(
