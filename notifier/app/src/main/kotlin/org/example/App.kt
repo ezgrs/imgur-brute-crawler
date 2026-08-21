@@ -1,23 +1,25 @@
 package org.example
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies
-import com.rabbitmq.client.ConnectionFactory
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.rabbitmq.client.ConnectionFactory
 
 data class ImageSavedEvent(
-    val imageId: String
+    val imageId: String,
 )
 
 fun main() {
-    val f = ConnectionFactory().apply {
-        host = "rabbitmq"
-        port = 5672
-        username = System.getenv("RABBITMQ_ROOT_USERNAME")
-        password = System.getenv("RABBITMQ_ROOT_PASSWORD")
-    }
-    val mapper = jacksonObjectMapper()
-        .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+    val f =
+        ConnectionFactory().apply {
+            host = "rabbitmq"
+            port = 5672
+            username = System.getenv("RABBITMQ_ROOT_USERNAME")
+            password = System.getenv("RABBITMQ_ROOT_PASSWORD")
+        }
+    val mapper =
+        jacksonObjectMapper()
+            .setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
 
     f.newConnection().use { c ->
         c.createChannel().use { ch ->
