@@ -2,11 +2,10 @@ use lapin::{
     BasicProperties, Connection, ConnectionProperties, options::BasicPublishOptions, options::*,
     types::FieldTable,
 };
-use serde::Deserialize;
 use std::env;
 use tokio_stream::StreamExt;
 
-#[derive(Deserialize)]
+#[derive(serde::Deserialize)]
 struct ImageMessage {
     image_id: String,
 }
