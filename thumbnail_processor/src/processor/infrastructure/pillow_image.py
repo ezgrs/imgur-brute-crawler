@@ -6,11 +6,10 @@ import PIL.Image
 import PIL.ImageOps
 
 from processor.application.ports.image import Image
-from processor.application.ports.mime_parser import MimeParseable
 
 
 @dataclasses.dataclass(kw_only=True, frozen=True)
-class PillowImage(Image, MimeParseable):
+class PillowImage(Image):
     image: PIL.Image.Image
 
     @staticmethod
@@ -35,21 +34,3 @@ class PillowImage(Image, MimeParseable):
 
     async def create_thumbnail(self) -> bytes:
         return await asyncio.to_thread(self._create_thumbnail)
-
-    @property
-    def mime_format(self) -> str | None:
-        format = self.image.format
-        if format is None:
-            return None
-
-        return {
-            "JPEG": "image/jpeg",
-            "PNG": "image/png",
-            "WEBP": "image/webp",
-            "GIF": "image/gif",
-            "BMP": "image/bmp",
-            "TIFF": "image/tiff",
-            "AVIF": "image/avif",
-            "HEIF": "image/heif",
-            "HEIC": "image/heic",
-        }.get(format)

@@ -2,14 +2,13 @@ import contextlib
 import typing
 
 import aioboto3
-import botocore.exceptions
 import faststream
 import faststream.rabbit
 import pydantic
 import pydantic_settings
 
 from processor.application.ports.storage import Storage
-from processor.infrastructure.storages.minio_impl import S3Storage
+from processor.infrastructure.minio_storage import S3Storage
 
 
 class ImageSaved(pydantic.BaseModel):
@@ -40,18 +39,6 @@ async def _initialize_storage(
             ),
         )
     )
-
-    # Create initial buckets
-    for bucket_name in ("images",):
-        try:
-            await s3_client.head_bucket(Bucket=bucket_name)
-        except botocore.exceptions.ClientError as e:
-            match e.response.get("Error"):
-                case {"Code": "404", "Message": "Not Found"}:
-                    await s3_client.create_bucket(Bucket=bucket_name)
-                case _:
-                    raise
-
     return S3Storage(client=s3_client)
 
 
@@ -70,7 +57,7 @@ def create_app() -> faststream.FastStream:
     )
     app = faststream.FastStream(broker)
     image_saved_queue = faststream.rabbit.RabbitQueue(
-        "image.saved.processor", declare=False
+        "image.saved.thumbnail-processor", declare=False
     )
 
     storage: Storage
@@ -82,7 +69,6 @@ def create_app() -> faststream.FastStream:
 
     @broker.subscriber(queue=image_saved_queue)
     async def on_image_saved(event: ImageSaved) -> None:
-        print("persist_metadata", event.image_id)
         print("persist_thumbnail", event.image_id)
 
     @app.after_shutdown
