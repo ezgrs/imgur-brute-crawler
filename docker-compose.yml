@@ -91,6 +91,18 @@ services:
     env_file:
       - .env
 
+  image-metadata-processor:
+    build:
+      context: metadata_processor
+      dockerfile: Dockerfile
+    container_name: metadata-processor-service
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+    env_file:
+      - .env
+
   image-notifier:
     build:
       context: notifier
