@@ -3,7 +3,7 @@ import 'package:postgres/postgres.dart';
 import '../models/metadata.dart';
 
 abstract class Database {
-  Future<void> saveMetadata(Metadata metadata);
+  Future<void> saveMetadata(String id, Metadata metadata);
 }
 
 class PostgresDatabase implements Database {
@@ -12,7 +12,7 @@ class PostgresDatabase implements Database {
   const PostgresDatabase({required this.connection});
 
   @override
-  Future<void> saveMetadata(Metadata metadata) async {
+  Future<void> saveMetadata(String id, Metadata metadata) async {
     await connection.execute(
       Sql.named('''
         INSERT INTO images (
@@ -21,8 +21,7 @@ class PostgresDatabase implements Database {
           height,
           size,
           mime_type,
-          hash,
-          created_at
+          hash
         )
         VALUES (
           @id,
@@ -31,17 +30,15 @@ class PostgresDatabase implements Database {
           @size,
           @mimeType,
           @hash,
-          @createdAt
         )
       '''),
       parameters: {
-        'id': metadata.id,
+        'id': id,
         'width': metadata.width,
         'height': metadata.height,
         'size': metadata.size,
         'mimeType': metadata.mimeType,
         'hash': metadata.hash,
-        'createdAt': metadata.createdAt,
       },
     );
   }
