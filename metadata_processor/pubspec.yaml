@@ -6,6 +6,7 @@ environment:
   sdk: ^3.11.5
 
 dependencies:
+  minio: ^3.5.8
   path: ^1.9.0
 
 dev_dependencies:
