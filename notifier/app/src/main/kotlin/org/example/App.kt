@@ -74,7 +74,13 @@ fun sendEmail(
                         DataHandler(
                             ByteArrayDataSource(contentBytes, contentType),
                         )
-                    attachment.fileName = imageId
+                    attachment.fileName = imageId +
+                        when (contentType.lowercase().substringBefore(";")) {
+                            "image/jpeg" -> ".jpg"
+                            "image/png" -> ".png"
+                            "image/gif" -> ".gif"
+                            else -> ""
+                        }
                     attachment.disposition = jakarta.mail.Part.ATTACHMENT
 
                     addBodyPart(attachment)
