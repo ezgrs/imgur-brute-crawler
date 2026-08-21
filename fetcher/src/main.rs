@@ -93,6 +93,18 @@ async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> 
     Ok(Some(bytes.to_vec()))
 }
 
+fn detect_content_type(bytes: &[u8]) -> &'static str {
+    if bytes.len() < 4 {
+        return "application/octet-stream";
+    }
+    match [bytes[0], bytes[1], bytes[2], bytes[3]] {
+        [0xff, 0xd8, 0xff, _] => "image/jpeg",
+        [0x47, 0x49, 0x46, 0x38] => "image/gif",
+        [0x89, 0x50, 0x4e, 0x47] => "image/png",
+        _ => "application/octet-stream",
+    }
+}
+
 async fn publish_image_saved(
     rabbitmq: &lapin::Channel,
     image_id: &str,
@@ -150,6 +162,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 s3.put_object()
                     .bucket("images")
                     .key(&image_id)
+                    .content_type(detect_content_type(&bytes))
                     .body(bytes.into())
                     .send()
                     .await?;
