@@ -1,9 +1,12 @@
 import 'dart:typed_data';
 
 import 'package:minio/minio.dart';
+import 'package:minio/models.dart';
+
+import '../models/image.dart';
 
 abstract class Storage {
-  Future<Uint8List> download(String bucket, String id);
+  Future<Image> download(String bucket, String id);
 }
 
 class S3Storage implements Storage {
@@ -12,12 +15,17 @@ class S3Storage implements Storage {
   const S3Storage({required this.client});
 
   @override
-  Future<Uint8List> download(String bucket, String id) async {
+  Future<Image> download(String bucket, String id) async {
+    final StatObjectResult stat = await client.statObject(bucket, id);
+
     final MinioByteStream stream = await client.getObject(bucket, id);
     final List<int> chunks = [];
     await for (final chunk in stream) {
       chunks.addAll(chunk);
     }
-    return Uint8List.fromList(chunks);
+    return Image(
+      bytes: Uint8List.fromList(chunks),
+      contentType: stat.metaData?["content-type"] ?? "application/octet-stream",
+    );
   }
 }
