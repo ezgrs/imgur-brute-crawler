@@ -16,3 +16,12 @@ class S3Storage(Storage):
             Body=contents,
             ContentType="image/png",
         )
+
+    async def download_image(self, id: str) -> bytes:
+        response = await self.client.get_object(
+            Bucket="images",
+            Key=id,
+        )
+
+        async with response["Body"] as stream:
+            return await stream.read()
