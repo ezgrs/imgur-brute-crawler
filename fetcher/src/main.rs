@@ -2,7 +2,6 @@ use lapin::{
     BasicProperties, Connection, ConnectionProperties, options::BasicPublishOptions, options::*,
     types::FieldTable,
 };
-use std::env;
 use tokio_stream::StreamExt;
 
 #[derive(serde::Deserialize)]
@@ -70,8 +69,8 @@ async fn publish_image_saved(channel: &lapin::Channel, image_id: &str) -> Result
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let username = env::var("RABBITMQ_ROOT_USERNAME")?;
-    let password = env::var("RABBITMQ_ROOT_PASSWORD")?;
+    let username = std::env::var("RABBITMQ_ROOT_USERNAME")?;
+    let password = std::env::var("RABBITMQ_ROOT_PASSWORD")?;
 
     let addr = format!("amqp://{}:{}@rabbitmq:5672/%2f", username, password);
     let connection = Connection::connect(&addr, ConnectionProperties::default()).await?;
@@ -79,8 +78,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let channel = connection.create_channel().await?;
 
     let _s3 = create_s3_client(
-        &env::var("MINIO_ROOT_USERNAME")?,
-        &env::var("MINIO_ROOT_PASSWORD")?,
+        &std::env::var("MINIO_ROOT_USERNAME")?,
+        &std::env::var("MINIO_ROOT_PASSWORD")?,
     )
     .await;
 
