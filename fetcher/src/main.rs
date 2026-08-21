@@ -1,7 +1,3 @@
-use lapin::{
-    BasicProperties, Connection, ConnectionProperties, options::BasicPublishOptions, options::*,
-    types::FieldTable,
-};
 use tokio_stream::StreamExt;
 
 #[derive(serde::Deserialize)]
@@ -57,9 +53,9 @@ async fn publish_image_saved(channel: &lapin::Channel, image_id: &str) -> Result
         .basic_publish(
             "events".into(),
             "image.saved".into(),
-            BasicPublishOptions::default(),
+            lapin::options::BasicPublishOptions::default(),
             payload.to_string().as_bytes(),
-            BasicProperties::default().with_content_type("application/json".into()),
+            lapin::BasicProperties::default().with_content_type("application/json".into()),
         )
         .await?
         .await?;
@@ -73,7 +69,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let password = std::env::var("RABBITMQ_ROOT_PASSWORD")?;
 
     let addr = format!("amqp://{}:{}@rabbitmq:5672/%2f", username, password);
-    let connection = Connection::connect(&addr, ConnectionProperties::default()).await?;
+    let connection =
+        lapin::Connection::connect(&addr, lapin::ConnectionProperties::default()).await?;
 
     let channel = connection.create_channel().await?;
 
@@ -87,8 +84,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .basic_consume(
             "image.requested".into(),
             "fetcher".into(),
-            BasicConsumeOptions::default(),
-            FieldTable::default(),
+            lapin::options::BasicConsumeOptions::default(),
+            lapin::types::FieldTable::default(),
         )
         .await?;
 
@@ -101,7 +98,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             None => {}
         }
 
-        delivery.ack(BasicAckOptions::default()).await?;
+        delivery
+            .ack(lapin::options::BasicAckOptions::default())
+            .await?;
     }
 
     Ok(())
