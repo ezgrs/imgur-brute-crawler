@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     application
     id("com.gradleup.shadow") version "9.2.2"
+    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
 }
 
 repositories {
