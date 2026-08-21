@@ -79,6 +79,12 @@ async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> 
         .await?;
 
     if response.status() == reqwest::StatusCode::FOUND {
+        let location = response
+            .headers()
+            .get(reqwest::header::LOCATION)
+            .and_then(|value| value.to_str().ok());
+
+        assert_eq!(location, Some("https://i.imgur.com/removed.png"));
         return Ok(None);
     }
 
