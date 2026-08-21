@@ -73,6 +73,8 @@ services:
       dockerfile: Dockerfile
     container_name: fetcher-service
     depends_on:
+      minio:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
 
@@ -85,6 +87,8 @@ services:
       dockerfile: Dockerfile
     container_name: thumbnail-processor-service
     depends_on:
+      minio:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
 
@@ -97,6 +101,10 @@ services:
       dockerfile: Dockerfile
     container_name: metadata-processor-service
     depends_on:
+      minio:
+        condition: service_started
+      postgres:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
 
@@ -110,6 +118,8 @@ services:
     container_name: notifier-service
     init: true
     depends_on:
+      minio:
+        condition: service_started
       rabbitmq:
         condition: service_healthy
 
