@@ -5,6 +5,7 @@ class Metadata {
   final int size;
   final String mimeType;
   final String hash;
+  final DateTime createdAt;
 
   const Metadata({
     required this.id,
@@ -13,5 +14,6 @@ class Metadata {
     required this.size,
     required this.mimeType,
     required this.hash,
+    required this.createdAt,
   });
 }
