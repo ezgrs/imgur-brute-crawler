@@ -95,6 +95,7 @@ fun main() {
         S3Client {
             region = "us-east-1"
             endpointUrl = Url.parse("http://minio:9000")
+            forcePathStyle = true
             credentialsProvider =
                 StaticCredentialsProvider {
                     accessKeyId = System.getenv("MINIO_ROOT_USERNAME")
