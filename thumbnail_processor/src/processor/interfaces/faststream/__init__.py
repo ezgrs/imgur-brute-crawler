@@ -8,8 +8,10 @@ import faststream.rabbit
 import pydantic
 import pydantic_settings
 
+from processor.application.ports.imaging import Imaging
 from processor.application.ports.storage import Storage
 from processor.infrastructure.minio_storage import S3Storage
+from processor.infrastructure.pillow_imaging import PillowImaging
 
 
 class ImageSaved(pydantic.BaseModel):
@@ -22,6 +24,10 @@ class Settings(pydantic_settings.BaseSettings):
 
     rabbitmq_root_username: str
     rabbitmq_root_password: str
+
+
+async def _initialize_imaging() -> Imaging:
+    return PillowImaging()
 
 
 async def _initialize_storage(
@@ -73,12 +79,16 @@ def create_app() -> faststream.FastStream:
         "image.saved.thumbnail-processor", declare=False
     )
 
+    imaging: Imaging
     storage: Storage
 
     @app.after_startup
     async def on_startup():
         nonlocal storage
         storage = await _initialize_storage(exit_stack, settings)
+
+        nonlocal imaging
+        imaging = await _initialize_imaging()
 
     @broker.subscriber(queue=image_saved_queue)
     async def on_image_saved(event: ImageSaved) -> None:
