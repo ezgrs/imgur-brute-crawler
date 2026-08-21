@@ -5,6 +5,19 @@ struct ImageMessage {
     image_id: String,
 }
 
+async fn create_rabbitmq_channel(
+    username: &str,
+    password: &str,
+) -> Result<lapin::Channel, lapin::Error> {
+    let addr = format!("amqp://{}:{}@rabbitmq:5672/%2f", username, password);
+    let connection =
+        lapin::Connection::connect(&addr, lapin::ConnectionProperties::default()).await?;
+
+    let channel = connection.create_channel().await?;
+
+    Ok(channel)
+}
+
 async fn create_s3_client(username: &str, password: &str) -> aws_sdk_s3::Client {
     let credentials = aws_sdk_s3::config::Credentials::new(username, password, None, None, "minio");
 
@@ -44,12 +57,15 @@ async fn fetch_image(image_id: &str) -> Result<Option<Vec<u8>>, reqwest::Error> 
     Ok(Some(bytes.to_vec()))
 }
 
-async fn publish_image_saved(channel: &lapin::Channel, image_id: &str) -> Result<(), lapin::Error> {
+async fn publish_image_saved(
+    rabbitmq: &lapin::Channel,
+    image_id: &str,
+) -> Result<(), lapin::Error> {
     let payload = serde_json::json!({
         "image_id": image_id,
     });
 
-    channel
+    rabbitmq
         .basic_publish(
             "events".into(),
             "image.saved".into(),
@@ -65,14 +81,11 @@ async fn publish_image_saved(channel: &lapin::Channel, image_id: &str) -> Result
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let username = std::env::var("RABBITMQ_ROOT_USERNAME")?;
-    let password = std::env::var("RABBITMQ_ROOT_PASSWORD")?;
-
-    let addr = format!("amqp://{}:{}@rabbitmq:5672/%2f", username, password);
-    let connection =
-        lapin::Connection::connect(&addr, lapin::ConnectionProperties::default()).await?;
-
-    let channel = connection.create_channel().await?;
+    let rabbitmq = create_rabbitmq_channel(
+        &std::env::var("RABBITMQ_ROOT_USERNAME")?,
+        &std::env::var("RABBITMQ_ROOT_PASSWORD")?,
+    )
+    .await?;
 
     let _s3 = create_s3_client(
         &std::env::var("MINIO_ROOT_USERNAME")?,
@@ -80,7 +93,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await;
 
-    let mut consumer = channel
+    let mut consumer = rabbitmq
         .basic_consume(
             "image.requested".into(),
             "fetcher".into(),
@@ -94,7 +107,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let message = parse_message(&delivery.data)?;
         match fetch_image(&message.image_id).await? {
-            Some(_) => publish_image_saved(&channel, &message.image_id).await?,
+            Some(_) => publish_image_saved(&rabbitmq, &message.image_id).await?,
             None => {}
         }
 
