@@ -38,7 +38,7 @@
       "auto_delete": false
     },
     {
-      "name": "image.saved.processor",
+      "name": "image.saved.thumbnail-processor",
       "vhost": "/",
       "durable": true,
       "auto_delete": false
@@ -61,7 +61,7 @@
     {
       "source": "events",
       "vhost": "/",
-      "destination": "image.saved.processor",
+      "destination": "image.saved.thumbnail-processor",
       "destination_type": "queue",
       "routing_key": "image.saved"
     },
