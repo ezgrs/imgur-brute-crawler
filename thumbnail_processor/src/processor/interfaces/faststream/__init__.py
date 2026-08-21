@@ -10,6 +10,7 @@ import pydantic_settings
 
 from processor.application.ports.imaging import Imaging
 from processor.application.ports.storage import Storage
+from processor.application.use_cases.generate import GenerateUseCase
 from processor.infrastructure.minio_storage import S3Storage
 from processor.infrastructure.pillow_imaging import PillowImaging
 
@@ -92,7 +93,9 @@ def create_app() -> faststream.FastStream:
 
     @broker.subscriber(queue=image_saved_queue)
     async def on_image_saved(event: ImageSaved) -> None:
-        print("persist_thumbnail", event.image_id)
+        await GenerateUseCase(imaging=imaging, storage=storage).execute(
+            event.image_id
+        )
 
     @app.after_shutdown
     async def on_shutdown() -> None:
