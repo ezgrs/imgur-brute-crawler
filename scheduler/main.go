@@ -40,6 +40,7 @@ func run(args RunArgs) error {
 	}
 	defer ch.Close()
 
+	randomId := generateRandomId(7)
 	err = ch.PublishWithContext(
 		context.Background(),
 		"events",
@@ -49,12 +50,13 @@ func run(args RunArgs) error {
 		amqp.Publishing{
 			ContentType: "application/json",
 			Timestamp:   time.Now(),
-			Body:        fmt.Appendf(nil, `{"image_id": "%s"}`, generateRandomId(7)),
+			Body:        fmt.Appendf(nil, `{"image_id": "%s"}`, randomId),
 		},
 	)
 	if err != nil {
 		return fmt.Errorf("failed to publish to the AMQP channel: %w", err)
 	}
+	log.Printf("event published: %s\n", randomId)
 	return nil
 }
 
@@ -65,5 +67,4 @@ func main() {
 	}); err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Event published successfully")
 }
