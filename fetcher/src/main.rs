@@ -1,4 +1,5 @@
 use tokio_stream::StreamExt;
+use tracing::Instrument;
 
 #[derive(serde::Deserialize)]
 struct ImageMessage {
@@ -138,6 +139,36 @@ async fn publish_image_saved(
     Ok(())
 }
 
+async fn handle(
+    rabbitmq: &lapin::Channel,
+    s3: &aws_sdk_s3::Client,
+    image_id: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    tracing::info!("event received");
+
+    match fetch_image(&image_id).await? {
+        Some(bytes) => {
+            tracing::info!("hit");
+
+            s3.put_object()
+                .bucket("images")
+                .key(image_id)
+                .content_type(detect_content_type(&bytes))
+                .body(bytes.into())
+                .send()
+                .await?;
+            tracing::info!("saved image into S3");
+
+            publish_image_saved(&rabbitmq, &image_id).await?;
+        }
+        None => {
+            tracing::info!("miss");
+        }
+    };
+
+    Ok(())
+}
+
 async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let rabbitmq = create_rabbitmq_channel(
         &std::env::var("RABBITMQ_ROOT_USERNAME")?,
@@ -168,34 +199,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         let message = parse_message(&delivery.data)?;
         let image_id = message.image_id;
 
-        tracing::info!(
-            image_id = %image_id,
-            "event received"
-        );
-
-        match fetch_image(&image_id).await? {
-            Some(bytes) => {
-                tracing::info!(
-                    image_id = %image_id,
-                    "hit"
-                );
-                s3.put_object()
-                    .bucket("images")
-                    .key(&image_id)
-                    .content_type(detect_content_type(&bytes))
-                    .body(bytes.into())
-                    .send()
-                    .await?;
-
-                publish_image_saved(&rabbitmq, &image_id).await?;
-            }
-            None => {
-                tracing::info!(
-                    image_id = %image_id,
-                    "miss"
-                );
-            }
-        }
+        let span = tracing::info_span!("event", image_id = %image_id);
+        handle(&rabbitmq, &s3, &image_id).instrument(span).await?;
 
         delivery
             .ack(lapin::options::BasicAckOptions::default())
