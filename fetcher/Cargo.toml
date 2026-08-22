@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1"
 aws-config = "1.11.0"
 aws-sdk-s3 = "1.143.0"
 lapin = "4.10.0"
