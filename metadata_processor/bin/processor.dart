@@ -40,7 +40,8 @@ Future<Listener> createListener({
   return RabbitMQListener(
     client: amqp.Client(
       settings: amqp.ConnectionSettings(
-        host: 'http://rabbitmq:5672',
+        host: 'rabbitmq',
+        port: 5672,
         authProvider: amqp.PlainAuthenticator(username, password),
       ),
     ),
