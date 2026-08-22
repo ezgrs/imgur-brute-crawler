@@ -44,6 +44,12 @@
       "auto_delete": false
     },
     {
+      "name": "image.saved.metadata-processor",
+      "vhost": "/",
+      "durable": true,
+      "auto_delete": false
+    },
+    {
       "name": "image.saved.notifier",
       "vhost": "/",
       "durable": true,
@@ -62,6 +68,13 @@
       "source": "events",
       "vhost": "/",
       "destination": "image.saved.thumbnail-processor",
+      "destination_type": "queue",
+      "routing_key": "image.saved"
+    },
+    {
+      "source": "events",
+      "vhost": "/",
+      "destination": "image.saved.metadata-processor",
       "destination_type": "queue",
       "routing_key": "image.saved"
     },
