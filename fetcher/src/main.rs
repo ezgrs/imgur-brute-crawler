@@ -1,3 +1,4 @@
+use anyhow::Context;
 use tokio_stream::StreamExt;
 use tracing::Instrument;
 
@@ -47,10 +48,7 @@ async fn create_s3_client(username: &str, password: &str) -> aws_sdk_s3::Client 
     aws_sdk_s3::Client::from_conf(s3_config)
 }
 
-async fn ensure_s3_bucket(
-    s3: &aws_sdk_s3::Client,
-    bucket: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+async fn ensure_s3_bucket(s3: &aws_sdk_s3::Client, bucket: &str) -> anyhow::Result<()> {
     if s3.head_bucket().bucket(bucket).send().await.is_ok() {
         return Ok(());
     }
@@ -143,10 +141,13 @@ async fn handle(
     rabbitmq: &lapin::Channel,
     s3: &aws_sdk_s3::Client,
     image_id: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> anyhow::Result<()> {
     tracing::info!("event received");
 
-    match fetch_image(&image_id).await? {
+    match fetch_image(&image_id)
+        .await
+        .context("failed to fetch image")?
+    {
         Some(bytes) => {
             tracing::info!("hit");
 
@@ -156,10 +157,13 @@ async fn handle(
                 .content_type(detect_content_type(&bytes))
                 .body(bytes.into())
                 .send()
-                .await?;
+                .await
+                .context("failed to save image into S3")?;
             tracing::info!("saved image into S3");
 
-            publish_image_saved(&rabbitmq, &image_id).await?;
+            publish_image_saved(&rabbitmq, &image_id)
+                .await
+                .context("failed to publish event")?;
         }
         None => {
             tracing::info!("miss");
@@ -169,12 +173,13 @@ async fn handle(
     Ok(())
 }
 
-async fn run() -> Result<(), Box<dyn std::error::Error>> {
+async fn run() -> anyhow::Result<()> {
     let rabbitmq = create_rabbitmq_channel(
         &std::env::var("RABBITMQ_ROOT_USERNAME")?,
         &std::env::var("RABBITMQ_ROOT_PASSWORD")?,
     )
-    .await?;
+    .await
+    .context("failed to connect to RabbitMQ")?;
 
     let s3 = create_s3_client(
         &std::env::var("MINIO_ROOT_USERNAME")?,
@@ -182,7 +187,9 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
     )
     .await;
 
-    ensure_s3_bucket(&s3, "images").await?;
+    ensure_s3_bucket(&s3, "images")
+        .await
+        .context("failed to create images bucket on S3")?;
 
     let mut consumer = rabbitmq
         .basic_consume(
@@ -191,7 +198,8 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
             lapin::options::BasicConsumeOptions::default(),
             lapin::types::FieldTable::default(),
         )
-        .await?;
+        .await
+        .context("failed to connect to RabbitMQ queue")?;
 
     while let Some(delivery) = consumer.next().await {
         let delivery = delivery?;
@@ -200,7 +208,10 @@ async fn run() -> Result<(), Box<dyn std::error::Error>> {
         let image_id = message.image_id;
 
         let span = tracing::info_span!("event", image_id = %image_id);
-        handle(&rabbitmq, &s3, &image_id).instrument(span).await?;
+        handle(&rabbitmq, &s3, &image_id)
+            .instrument(span)
+            .await
+            .with_context(|| format!("failed to handle event {}", image_id))?;
 
         delivery
             .ack(lapin::options::BasicAckOptions::default())
