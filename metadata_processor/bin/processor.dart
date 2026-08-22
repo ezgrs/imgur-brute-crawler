@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:dart_amqp/dart_amqp.dart' as amqp;
+import 'package:dbmigrator_psql/dbmigrator_psql.dart';
 import 'package:minio/minio.dart' as minio;
 import 'package:postgres/postgres.dart' as postgres;
 import 'package:processor/models/image.dart';
@@ -15,18 +16,24 @@ Future<Database> createDatabase({
   required String password,
   required String database,
 }) async {
-  return PostgresDatabase(
-    connection: await postgres.Connection.open(
-      postgres.Endpoint(
-        host: 'postgres',
-        port: 5432,
-        database: database,
-        username: username,
-        password: password,
-      ),
-      settings: postgres.ConnectionSettings(sslMode: postgres.SslMode.disable),
+  final postgres.Connection connection = await postgres.Connection.open(
+    postgres.Endpoint(
+      host: 'postgres',
+      port: 5432,
+      database: database,
+      username: username,
+      password: password,
     ),
+    settings: postgres.ConnectionSettings(sslMode: postgres.SslMode.disable),
   );
+
+  // Apply migrations
+  final migrationResult = await connection
+      .migrator(options: PsqlMigrationOptions(path: './migrations'))
+      .migrate(version: '0.1.0');
+  print(migrationResult.message);
+
+  return PostgresDatabase(connection: connection);
 }
 
 Future<Imaging> createImaging() async {
