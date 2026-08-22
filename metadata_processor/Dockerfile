@@ -15,6 +15,7 @@ FROM debian:bookworm-slim
 WORKDIR /app
 
 COPY --from=build /app/processor .
+COPY --from=build /app/migrations ./migrations
 
 EXPOSE 8080
 
