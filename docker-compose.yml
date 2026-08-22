@@ -152,11 +152,27 @@ services:
     networks:
       - observability
 
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "${DOCKER_GRAFANA_PORT:-3000}:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ROOT_USERNAME}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ROOT_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./assets/grafana/loki.yaml:/etc/grafana/provisioning/datasources/loki.yaml:ro
+    depends_on:
+      - loki
+    networks:
+      - observability
+
 volumes:
   minio_data:
   postgres_data:
   rabbitmq_data:
   loki_data:
+  grafana_data:
 
 networks:
   app:
