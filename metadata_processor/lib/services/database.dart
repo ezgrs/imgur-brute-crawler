@@ -31,6 +31,12 @@ class PostgresDatabase implements Database {
           @mimeType,
           @hash
         )
+        ON CONFLICT (id) DO UPDATE SET
+          width = EXCLUDED.width,
+          height = EXCLUDED.height,
+          size = EXCLUDED.size,
+          mime_type = EXCLUDED.mime_type,
+          hash = EXCLUDED.hash
       '''),
       parameters: {
         'id': id,
