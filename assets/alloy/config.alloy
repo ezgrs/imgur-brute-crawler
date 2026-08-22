@@ -38,7 +38,7 @@ loki.source.docker "containers" {
   targets = discovery.docker.containers.targets
 
   labels = {
-    platform = "docker"
+    platform = "docker",
   }
 
   relabel_rules = discovery.relabel.containers.rules
