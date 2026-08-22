@@ -148,6 +148,11 @@ def create_app() -> faststream.FastStream:
                 exc_info=True,
             )
 
+        logger.info(
+            "thumbnail generated",
+            extra={"fields": {"image_id": image_id}},
+        )
+
     @app.after_shutdown
     async def on_shutdown() -> None:
         await exit_stack.aclose()
