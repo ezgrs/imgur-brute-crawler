@@ -116,8 +116,9 @@ def create_app() -> faststream.FastStream:
             f"{settings.rabbitmq_root_password}@"
             "rabbitmq:5672"
         ),
+        logger=None,
     )
-    app = faststream.FastStream(broker)
+    app = faststream.FastStream(broker, logger=None)
     image_saved_queue = faststream.rabbit.RabbitQueue(
         "image.saved.thumbnail-processor", declare=False
     )
