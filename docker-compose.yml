@@ -142,10 +142,22 @@ services:
     networks:
       - app
 
+  loki:
+    image: grafana/loki:3.7.0
+    command:
+      - -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./assets/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+    networks:
+      - observability
+
 volumes:
   minio_data:
   postgres_data:
   rabbitmq_data:
+  loki_data:
 
 networks:
   app:
+  observability:
