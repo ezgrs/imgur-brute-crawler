@@ -54,10 +54,11 @@ Future<Storage> createStorage({
 }) async {
   return S3Storage(
     client: minio.Minio(
-      endPoint: 'http://minio:9000',
+      endPoint: 'minio',
+      port: 9000,
       accessKey: username,
       secretKey: password,
-      useSSL: true,
+      useSSL: false,
     ),
   );
 }
