@@ -29,7 +29,7 @@ class PostgresDatabase implements Database {
           @height,
           @size,
           @mimeType,
-          @hash,
+          @hash
         )
       '''),
       parameters: {
