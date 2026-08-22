@@ -15,6 +15,9 @@ class PillowImaging(Imaging):
         image = PIL.ImageOps.exif_transpose(image)
         image.thumbnail((256, 256), PIL.Image.Resampling.LANCZOS)
 
+        if image.mode in ("RGBA", "LA", "P"):
+            image = image.convert("RGB")
+
         output = io.BytesIO()
         image.save(
             output,
