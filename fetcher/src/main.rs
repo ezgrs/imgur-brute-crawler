@@ -1,21 +1,10 @@
 use anyhow::Context;
 use tokio_stream::StreamExt;
-use tracing::Instrument;
+mod logging;
 
 #[derive(serde::Deserialize)]
 struct ImageMessage {
     image_id: String,
-}
-
-fn initialize_logging() {
-    tracing_subscriber::fmt()
-        .json()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
-        )
-        .with_target(false)
-        .init();
 }
 
 async fn create_rabbitmq_channel(
@@ -138,18 +127,19 @@ async fn publish_image_saved(
 }
 
 async fn handle(
+    logger: &logging::Logger,
     rabbitmq: &lapin::Channel,
     s3: &aws_sdk_s3::Client,
     image_id: &str,
 ) -> anyhow::Result<()> {
-    tracing::info!("event received");
+    logger.info("event received");
 
     match fetch_image(&image_id)
         .await
         .context("failed to fetch image")?
     {
         Some(bytes) => {
-            tracing::info!("hit");
+            logger.info("hit");
 
             s3.put_object()
                 .bucket("images")
@@ -159,21 +149,21 @@ async fn handle(
                 .send()
                 .await
                 .context("failed to save image into S3")?;
-            tracing::info!("saved image into S3");
+            logger.info("saved image into S3");
 
             publish_image_saved(&rabbitmq, &image_id)
                 .await
                 .context("failed to publish event")?;
         }
         None => {
-            tracing::info!("miss");
+            logger.info("miss");
         }
     };
 
     Ok(())
 }
 
-async fn run() -> anyhow::Result<()> {
+async fn run(logger: &logging::Logger) -> anyhow::Result<()> {
     let rabbitmq = create_rabbitmq_channel(
         &std::env::var("RABBITMQ_ROOT_USERNAME")?,
         &std::env::var("RABBITMQ_ROOT_PASSWORD")?,
@@ -207,9 +197,8 @@ async fn run() -> anyhow::Result<()> {
         let message = parse_message(&delivery.data)?;
         let image_id = message.image_id;
 
-        let span = tracing::info_span!("event", image_id = %image_id);
-        handle(&rabbitmq, &s3, &image_id)
-            .instrument(span)
+        let event_logger = logger.with("image_id", image_id.clone());
+        handle(&event_logger, &rabbitmq, &s3, &image_id)
             .await
             .with_context(|| format!("failed to handle event {}", image_id))?;
 
@@ -223,12 +212,10 @@ async fn run() -> anyhow::Result<()> {
 
 #[tokio::main]
 async fn main() {
-    initialize_logging();
+    let logger = logging::Logger::new("fetcher");
 
-    let _guard = tracing::info_span!("application", service = "fetcher",).entered();
-
-    if let Err(err) = run().await {
-        tracing::error!(error = ?err, "failed to consume event");
+    if let Err(err) = run(&logger).await {
+        logger.error("failed to consume event", &err);
         std::process::exit(1);
     }
 }
