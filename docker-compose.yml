@@ -130,7 +130,6 @@ services:
       context: notifier
       dockerfile: Dockerfile
     container_name: notifier-service
-    init: true
     depends_on:
       minio:
         condition: service_started
