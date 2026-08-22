@@ -24,6 +24,7 @@ Future<Database> createDatabase({
         username: username,
         password: password,
       ),
+      settings: postgres.ConnectionSettings(sslMode: postgres.SslMode.disable),
     ),
   );
 }
