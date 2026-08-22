@@ -25,18 +25,18 @@ type RunArgs struct {
 	AmqpPassword string
 }
 
-func run(args RunArgs) error {
+func run(args RunArgs) (string, error) {
 	conn, err := amqp.Dial(
 		fmt.Sprintf("amqp://%s:%s@rabbitmq:5672/", args.AmqpUsername, args.AmqpPassword),
 	)
 	if err != nil {
-		return fmt.Errorf("failed to connect to AMQP: %w", err)
+		return "", fmt.Errorf("failed to connect to AMQP: %w", err)
 	}
 	defer conn.Close()
 
 	ch, err := conn.Channel()
 	if err != nil {
-		return fmt.Errorf("failed to create an AMQP channel: %w", err)
+		return "", fmt.Errorf("failed to create an AMQP channel: %w", err)
 	}
 	defer ch.Close()
 
@@ -54,17 +54,18 @@ func run(args RunArgs) error {
 		},
 	)
 	if err != nil {
-		return fmt.Errorf("failed to publish to the AMQP channel: %w", err)
+		return "", fmt.Errorf("failed to publish to the AMQP channel: %w", err)
 	}
-	log.Printf("event published: %s\n", randomId)
-	return nil
+	return randomId, nil
 }
 
 func main() {
-	if err := run(RunArgs{
+	if randomId, err := run(RunArgs{
 		AmqpUsername: os.Getenv("RABBITMQ_ROOT_USERNAME"),
 		AmqpPassword: os.Getenv("RABBITMQ_ROOT_PASSWORD"),
 	}); err != nil {
 		log.Fatal(err)
+	} else {
+		log.Printf("event published: %s\n", randomId)
 	}
 }
