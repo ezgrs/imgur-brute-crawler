@@ -5,6 +5,17 @@ struct ImageMessage {
     image_id: String,
 }
 
+fn initialize_logging() {
+    tracing_subscriber::fmt()
+        .json()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .with_target(false)
+        .init();
+}
+
 async fn create_rabbitmq_channel(
     username: &str,
     password: &str,
@@ -127,8 +138,7 @@ async fn publish_image_saved(
     Ok(())
 }
 
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn run() -> Result<(), Box<dyn std::error::Error>> {
     let rabbitmq = create_rabbitmq_channel(
         &std::env::var("RABBITMQ_ROOT_USERNAME")?,
         &std::env::var("RABBITMQ_ROOT_PASSWORD")?,
@@ -157,9 +167,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         let message = parse_message(&delivery.data)?;
         let image_id = message.image_id;
+
+        tracing::info!(
+            image_id = %image_id,
+            "event received"
+        );
+
         match fetch_image(&image_id).await? {
             Some(bytes) => {
-                println!("[{image_id}] hit");
+                tracing::info!(
+                    image_id = %image_id,
+                    "hit"
+                );
                 s3.put_object()
                     .bucket("images")
                     .key(&image_id)
@@ -171,7 +190,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 publish_image_saved(&rabbitmq, &image_id).await?;
             }
             None => {
-                println!("[{image_id}] miss");
+                tracing::info!(
+                    image_id = %image_id,
+                    "miss"
+                );
             }
         }
 
@@ -181,4 +203,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+#[tokio::main]
+async fn main() {
+    initialize_logging();
+
+    let _guard = tracing::info_span!("application", service = "fetcher",).entered();
+
+    if let Err(err) = run().await {
+        tracing::error!(error = ?err, "failed to consume event");
+        std::process::exit(1);
+    }
 }
