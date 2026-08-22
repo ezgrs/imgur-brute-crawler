@@ -65,6 +65,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.1"
+  dbmigrator:
+    dependency: transitive
+    description:
+      name: dbmigrator
+      sha256: fc79bdb7c73f5710d06e092deb14ea55fc75a134d2b114c4ca3e222a69eca300
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
+  dbmigrator_psql:
+    dependency: "direct main"
+    description:
+      name: dbmigrator_psql
+      sha256: dbc4f9a192d7f83791aa6ba7026d719a00e2652554f39b3730c7ccb2bc8c67ff
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.2"
   hashcodes:
     dependency: transitive
     description:
@@ -177,6 +193,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.5.12"
+  pub_semver:
+    dependency: transitive
+    description:
+      name: pub_semver
+      sha256: "5bfcf68ca79ef689f8990d1160781b4bad40a3bd5e5218ad4076ddb7f4081585"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.0"
   source_span:
     dependency: transitive
     description:
