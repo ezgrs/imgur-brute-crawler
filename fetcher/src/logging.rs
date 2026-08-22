@@ -36,7 +36,12 @@ impl Logger {
             output.insert("error".into(), error.to_string().into());
         }
 
-        output.insert("timestamp".into(), chrono::Utc::now().to_rfc3339().into());
+        output.insert(
+            "timestamp".into(),
+            chrono::Utc::now()
+                .to_rfc3339_opts(chrono::SecondsFormat::Secs, true)
+                .into(),
+        );
 
         println!("{}", serde_json::Value::Object(output));
     }
