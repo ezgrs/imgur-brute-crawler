@@ -34,6 +34,7 @@ def _initialize_logger() -> logging.LoggerAdapter:
     class JsonFormatter(logging.Formatter):
         def format(self, record):
             data = {
+                "service": "thumbnail-processor",
                 "timestamp": (
                     datetime.datetime.fromtimestamp(
                         record.created,
@@ -58,14 +59,7 @@ def _initialize_logger() -> logging.LoggerAdapter:
     logger = logging.getLogger("thumbnail-processor")
     logger.setLevel(logging.INFO)
     logger.addHandler(handler)
-    return logging.LoggerAdapter(
-        logger,
-        {
-            "fields": {
-                "service": "thumbnail-processor",
-            },
-        },
-    )
+    return logging.LoggerAdapter(logger)
 
 
 async def _initialize_imaging() -> Imaging:
