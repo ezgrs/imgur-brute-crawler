@@ -1,4 +1,6 @@
 import contextlib
+import json
+import logging
 import typing
 
 import aioboto3
@@ -25,6 +27,37 @@ class Settings(pydantic_settings.BaseSettings):
 
     rabbitmq_root_username: str
     rabbitmq_root_password: str
+
+
+def _initialize_logger() -> logging.LoggerAdapter:
+    class JsonFormatter(logging.Formatter):
+        def format(self, record):
+            data = {
+                "timestamp": self.formatTime(record, self.datefmt),
+                "level": record.levelname,
+                "message": record.getMessage(),
+            }
+
+            extra_fields = getattr(record, "fields", None)
+            if extra_fields:
+                data.update(extra_fields)
+
+            return json.dumps(data)
+
+    handler = logging.StreamHandler()
+    handler.setFormatter(JsonFormatter())
+
+    logger = logging.getLogger("thumbnail-processor")
+    logger.setLevel(logging.INFO)
+    logger.addHandler(handler)
+    return logging.LoggerAdapter(
+        logger,
+        {
+            "fields": {
+                "service": "thumbnail-processor",
+            },
+        },
+    )
 
 
 async def _initialize_imaging() -> Imaging:
@@ -64,6 +97,7 @@ async def _initialize_storage(
 
 def create_app() -> faststream.FastStream:
     settings = Settings()  # pyright: ignore[reportCallIssue]
+    logger = _initialize_logger()
 
     exit_stack = contextlib.AsyncExitStack()
 
@@ -93,9 +127,23 @@ def create_app() -> faststream.FastStream:
 
     @broker.subscriber(queue=image_saved_queue)
     async def on_image_saved(event: ImageSaved) -> None:
-        await GenerateUseCase(imaging=imaging, storage=storage).execute(
-            event.image_id
+        image_id = event.image_id
+        logger.info(
+            "event received",
+            extra={"fields": {"image_id": image_id}},
         )
+
+        try:
+            await GenerateUseCase(
+                imaging=imaging,
+                storage=storage,
+            ).execute(image_id)
+        except Exception:
+            logger.error(
+                "failed to generate thumbnail",
+                extra={"fields": {"image_id": image_id}},
+                exc_info=True,
+            )
 
     @app.after_shutdown
     async def on_shutdown() -> None:
