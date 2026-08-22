@@ -9,6 +9,7 @@ import 'package:processor/models/metadata.dart';
 import 'package:processor/services/database.dart';
 import 'package:processor/services/imaging.dart';
 import 'package:processor/services/listener.dart';
+import 'package:processor/services/logger.dart';
 import 'package:processor/services/storage.dart';
 
 Future<Database> createDatabase({
@@ -70,19 +71,63 @@ Future<Storage> createStorage({
   );
 }
 
+Future<void> handle({
+  required Database database,
+  required Imaging imaging,
+  required Storage storage,
+  required Logger logger,
+  required String imageId,
+}) async {
+  final Image image;
+  try {
+    image = await storage.download("images", imageId);
+  } catch (e, s) {
+    logger.error("failed to download image from S3", error: e, stackTrace: s);
+    return;
+  }
+  logger.info("downloaded image from S3");
+
+  final Metadata metadata;
+  try {
+    metadata = await imaging.parseMetadata(image.bytes, image.contentType);
+  } catch (e, s) {
+    logger.error(
+      "failed to parse metadata from image",
+      error: e,
+      stackTrace: s,
+    );
+    return;
+  }
+  logger.info("parsed metadata from image");
+
+  try {
+    await database.saveMetadata(imageId, metadata);
+  } catch (e, s) {
+    logger.error(
+      "failed to save metadata to database",
+      error: e,
+      stackTrace: s,
+    );
+    return;
+  }
+  logger.info("saved metadata to database");
+}
+
 Future<void> run({
   required Database database,
   required Imaging imaging,
   required Listener listener,
   required Storage storage,
+  required Logger logger,
 }) async {
   await listener.listen((imageId) async {
-    final Image image = await storage.download("images", imageId);
-    final Metadata metadata = await imaging.parseMetadata(
-      image.bytes,
-      image.contentType,
+    await handle(
+      database: database,
+      imaging: imaging,
+      storage: storage,
+      logger: logger.child({"image_id": imageId}),
+      imageId: imageId,
     );
-    await database.saveMetadata(imageId, metadata);
   });
 }
 
@@ -102,5 +147,6 @@ Future<void> main() async {
       username: Platform.environment['MINIO_ROOT_USERNAME']!,
       password: Platform.environment['MINIO_ROOT_PASSWORD']!,
     ),
+    logger: Logger({"service": "metadata-processor"}),
   );
 }
