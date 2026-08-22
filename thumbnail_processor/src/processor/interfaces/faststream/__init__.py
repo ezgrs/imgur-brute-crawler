@@ -1,4 +1,5 @@
 import contextlib
+import datetime
 import json
 import logging
 import typing
@@ -33,7 +34,14 @@ def _initialize_logger() -> logging.LoggerAdapter:
     class JsonFormatter(logging.Formatter):
         def format(self, record):
             data = {
-                "timestamp": self.formatTime(record, self.datefmt),
+                "timestamp": (
+                    datetime.datetime.fromtimestamp(
+                        record.created,
+                        tz=datetime.timezone.utc,
+                    )
+                    .isoformat(timespec="milliseconds")
+                    .replace("+00:00", "Z")
+                ),
                 "level": record.levelname,
                 "message": record.getMessage(),
             }
