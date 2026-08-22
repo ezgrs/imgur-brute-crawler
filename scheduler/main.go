@@ -3,13 +3,34 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"log/slog"
 	"math/rand"
 	"os"
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+func newLogger() *slog.Logger {
+	return slog.New(
+		slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+			Level: slog.LevelInfo,
+			ReplaceAttr: func(groups []string, a slog.Attr) slog.Attr {
+				if len(groups) == 0 {
+					switch a.Key {
+					case slog.TimeKey:
+						a.Key = "timestamp"
+					case slog.MessageKey:
+						a.Key = "message"
+					}
+				}
+				return a
+			},
+		}),
+	).With(
+		slog.String("service", "scheduler"),
+	)
+}
 
 func generateRandomId(n int) string {
 	const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -60,12 +81,19 @@ func run(args RunArgs) (string, error) {
 }
 
 func main() {
+	logger := newLogger()
 	if randomId, err := run(RunArgs{
 		AmqpUsername: os.Getenv("RABBITMQ_ROOT_USERNAME"),
 		AmqpPassword: os.Getenv("RABBITMQ_ROOT_PASSWORD"),
 	}); err != nil {
-		log.Fatal(err)
+		logger.Error(
+			"failed to publish event",
+			slog.Any("error", err),
+		)
 	} else {
-		log.Printf("event published: %s\n", randomId)
+		logger.Info(
+			"published event",
+			slog.String("image_id", randomId),
+		)
 	}
 }
