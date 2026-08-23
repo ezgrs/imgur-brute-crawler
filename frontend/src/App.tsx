@@ -379,7 +379,7 @@ function ImageDetailsDialog({
   canNext,
   navigating,
 }: ImageDetailsDialogProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<"direct" | "imgur" | null>(null)
   const [imageFailed, setImageFailed] = useState(false)
   const megapixels = ((image.width * image.height) / 1_000_000).toFixed(2)
   const fileExtension = image.mimeType.split("/")[1]?.toUpperCase() || "IMG"
@@ -410,11 +410,11 @@ function ImageDetailsDialog({
     }
   }, [canNext, canPrevious, navigating, onClose, onNext, onPrevious])
 
-  const copyUrl = async () => {
+  const copyUrl = async (type: "direct" | "imgur", url: string) => {
     try {
-      await navigator.clipboard.writeText(imageUrl)
-      setCopied(true)
-      window.setTimeout(() => setCopied(false), 1400)
+      await navigator.clipboard.writeText(url)
+      setCopied(type)
+      window.setTimeout(() => setCopied(null), 1400)
     } catch (err) {
       console.error("Failed to copy URL:", err)
     }
@@ -543,61 +543,78 @@ function ImageDetailsDialog({
                 <Button
                   size="lg"
                   className="h-10 justify-start rounded-md"
-                  onClick={() => window.open(imageUrl, "_blank")}
-                >
-                  <ExternalLink />
-                  Open in new tab
-                </Button>
-
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-10 justify-start rounded-md bg-white"
                   onClick={() => onDownload(image.id, image.mimeType)}
                 >
                   <ArrowDownToLine />
                   Download image
                 </Button>
-
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="h-10 justify-start rounded-md bg-white"
-                  onClick={() => window.open(imgurUrl, "_blank")}
-                >
-                  <ExternalLink />
-                  Open on Imgur
-                </Button>
               </div>
             </div>
 
-            <div className="rounded-md border border-neutral-200 p-3">
+            <div className="space-y-2 rounded-md border border-neutral-200 p-3">
               <p className="mb-2 text-xs font-medium uppercase tracking-[0.12em] text-neutral-400">
-                Direct URL
+                Links
               </p>
-              <div className="flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-md bg-neutral-100 px-2 py-1.5 text-xs text-neutral-700">
-                  {imageUrl}
-                </code>
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  className="bg-white"
-                  onClick={copyUrl}
-                  aria-label="Copy URL"
-                  title="Copy URL"
-                >
-                  <Copy />
-                </Button>
-              </div>
-              {copied && (
-                <p className="mt-2 text-xs font-medium text-neutral-600">
-                  URL copied.
-                </p>
-              )}
+              <LinkCard
+                label="Direct URL"
+                url={imageUrl}
+                copied={copied === "direct"}
+                onCopy={() => copyUrl("direct", imageUrl)}
+              />
+              <LinkCard
+                label="Imgur URL"
+                url={imgurUrl}
+                copied={copied === "imgur"}
+                onCopy={() => copyUrl("imgur", imgurUrl)}
+              />
             </div>
           </div>
         </aside>
+      </div>
+    </div>
+  )
+}
+
+type LinkCardProps = {
+  label: string
+  url: string
+  copied: boolean
+  onCopy: () => void
+}
+
+function LinkCard({ label, url, copied, onCopy }: LinkCardProps) {
+  return (
+    <div className="rounded-md border border-neutral-200 bg-neutral-50 p-2.5">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span className="text-xs font-medium text-neutral-600">{label}</span>
+        {copied && (
+          <span className="text-xs font-medium text-neutral-500">Copied</span>
+        )}
+      </div>
+      <div className="flex items-center gap-2">
+        <code className="min-w-0 flex-1 truncate rounded-md bg-white px-2 py-1.5 text-xs text-neutral-700 ring-1 ring-neutral-200">
+          {url}
+        </code>
+        <Button
+          size="icon-sm"
+          variant="outline"
+          className="bg-white"
+          onClick={() => window.open(url, "_blank")}
+          aria-label={`Open ${label}`}
+          title={`Open ${label}`}
+        >
+          <ExternalLink />
+        </Button>
+        <Button
+          size="icon-sm"
+          variant="outline"
+          className="bg-white"
+          onClick={onCopy}
+          aria-label={`Copy ${label}`}
+          title={`Copy ${label}`}
+        >
+          <Copy />
+        </Button>
       </div>
     </div>
   )
