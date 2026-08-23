@@ -1,5 +1,7 @@
 package dev.enzosantos.imgurdex.backend.image;
 
+import dev.enzosantos.imgurdex.backend.image.dto.ImageResponse;
+import dev.enzosantos.imgurdex.backend.image.mapper.ImageMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -8,20 +10,23 @@ import org.springframework.stereotype.Service;
 public class ImageService {
 
     private final ImageRepository imageRepository;
+    private final ImageMapper imageMapper;
 
-    public ImageService(ImageRepository imageRepository) {
+    public ImageService(ImageRepository imageRepository, ImageMapper imageMapper) {
         this.imageRepository = imageRepository;
+        this.imageMapper = imageMapper;
     }
 
-    public Page<Image> findAll(Pageable pageable) {
-        return imageRepository.findAll(pageable);
+    public Page<ImageResponse> findAll(Pageable pageable) {
+        final Page<Image> images = imageRepository.findAll(pageable);
+        return images.map(imageMapper::toResponse);
     }
 
-    public Image findById(Long id) {
-        return imageRepository.findById(id).orElseThrow();
+    public ImageResponse findById(Long id) {
+        return imageRepository.findById(id).map(imageMapper::toResponse).orElseThrow();
     }
 
-    public Image findRandom() {
-        return imageRepository.findRandom().orElseThrow();
+    public ImageResponse findRandom() {
+        return imageRepository.findRandom().map(imageMapper::toResponse).orElseThrow();
     }
 }

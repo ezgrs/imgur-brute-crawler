@@ -1,5 +1,6 @@
 package dev.enzosantos.imgurdex.backend.image;
 
+import dev.enzosantos.imgurdex.backend.image.dto.ImageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.*;
@@ -15,17 +16,17 @@ public class ImageController {
     }
 
     @GetMapping
-    public Page<Image> getImages(Pageable pageable) {
+    public Page<ImageResponse> getImages(Pageable pageable) {
         return imageService.findAll(pageable);
     }
 
     @GetMapping("/{id}")
-    public Image getImage(@PathVariable Long id) {
+    public ImageResponse getImage(@PathVariable Long id) {
         return imageService.findById(id);
     }
 
     @GetMapping("/random")
-    public Image getRandomImage() {
+    public ImageResponse getRandomImage() {
         return imageService.findRandom();
     }
 }
