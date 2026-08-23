@@ -482,15 +482,15 @@ function ImageDetailsDialog({
       onMouseDown={onClose}
     >
       <div
-        className="grid max-h-[94vh] w-full max-w-7xl overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-white/10 lg:grid-cols-[minmax(0,1fr)_360px]"
+        className="grid h-[94vh] w-full max-w-7xl grid-rows-[minmax(0,1fr)_minmax(260px,42vh)] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-white/10 lg:grid-cols-[minmax(0,1fr)_360px] lg:grid-rows-1"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <div className="relative flex min-h-[48vh] items-center justify-center bg-neutral-950 lg:min-h-[760px]">
+        <div className="relative flex min-h-0 items-center justify-center bg-neutral-950">
           {!imageFailed ? (
             <img
               src={imageUrl}
               alt={`Image ${image.id}`}
-              className="max-h-[62vh] w-full object-contain lg:max-h-[94vh]"
+              className="h-full w-full object-contain"
               onError={() => setImageFailed(true)}
             />
           ) : (
