@@ -4,13 +4,10 @@ services:
     container_name: minio
     restart: unless-stopped
 
-    ports:
-      - "${DOCKER_MINIO_PORT:-9000}:9000"
-      - "${DOCKER_MINIO_CONSOLE_PORT:-9001}:9001"
-
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USERNAME}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BROWSER_REDIRECT_URL: ${IMGURDEX_PUBLIC_URL}/admin/minio/
 
     volumes:
       - minio_data:/data
@@ -41,10 +38,6 @@ services:
     image: rabbitmq:4-management
     container_name: rabbitmq
     restart: unless-stopped
-
-    ports:
-      - "${DOCKER_RABBITMQ_PORT:-5672}:5672"
-      - "${DOCKER_RABBITMQ_CONSOLE_PORT:-15672}:15672"
 
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -156,9 +149,6 @@ services:
       postgres:
         condition: service_started
 
-    ports:
-      - "${DOCKER_BACKEND_PORT:-8080}:8080"
-
     env_file:
       - .env
     networks:
@@ -174,8 +164,26 @@ services:
       backend:
         condition: service_started
 
+    networks:
+      - app
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx
+    restart: unless-stopped
+
     ports:
-      - "${DOCKER_FRONTEND_PORT:-80}:80"
+      - "80:80"
+
+    volumes:
+      - ./assets/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    depends_on:
+      - frontend
+      - backend
+      - grafana
+      - minio
+      - rabbitmq
 
     networks:
       - app
@@ -192,11 +200,11 @@ services:
 
   grafana:
     image: grafana/grafana:latest
-    ports:
-      - "${DOCKER_GRAFANA_PORT:-3000}:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ROOT_USERNAME}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ROOT_PASSWORD}
+      GF_SERVER_ROOT_URL: ${IMGURDEX_PUBLIC_URL}/admin/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./assets/grafana/loki.yaml:/etc/grafana/provisioning/datasources/loki.yaml:ro
