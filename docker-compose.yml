@@ -156,6 +156,9 @@ services:
       postgres:
         condition: service_started
 
+    ports:
+      - "${DOCKER_BACKEND_PORT:-8080}:8080"
+
     env_file:
       - .env
     networks:
