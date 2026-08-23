@@ -104,8 +104,6 @@ def run(settings: Settings) -> None:
         # Inspect image
         try:
             with PIL.Image.open(io.BytesIO(image_bytes)) as image:
-                image.verify()
-
                 width, height = image.size
                 thumbnail_bytes = create_thumbnail(image)
 
