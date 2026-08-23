@@ -8,6 +8,7 @@ import pydantic_settings
 import boto3
 import psycopg
 import google.cloud.storage
+import PIL
 import PIL.Image
 import PIL.ImageOps
 
@@ -101,9 +102,17 @@ def run(settings: Settings) -> None:
         image_bytes = blob.download_as_bytes()
 
         # Inspect image
-        image = PIL.Image.open(io.BytesIO(image_bytes))
+        try:
+            with PIL.Image.open(io.BytesIO(image_bytes)) as image:
+                image.verify()
 
-        width, height = image.size
+                width, height = image.size
+                thumbnail_bytes = create_thumbnail(image)
+
+        except (PIL.UnidentifiedImageError, OSError):
+            log("Skipping, not an image")
+            continue
+
         size = len(image_bytes)
         mime_type = blob.content_type or "application/octet-stream"
         image_hash = hashlib.sha256(image_bytes).hexdigest()
@@ -118,7 +127,6 @@ def run(settings: Settings) -> None:
             Metadata={"original-created-at": blob.time_created.isoformat()},
         )
 
-        thumbnail_bytes = create_thumbnail(image)
         log("Uploading thumbnail to S3...")
         s3.put_object(
             Bucket="thumbnails",
