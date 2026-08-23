@@ -22,7 +22,7 @@ public class ImageService {
         return images.map(imageMapper::toResponse);
     }
 
-    public ImageResponse findById(Long id) {
+    public ImageResponse findById(String id) {
         return imageRepository.findById(id).map(imageMapper::toResponse).orElseThrow();
     }
 
