@@ -66,6 +66,7 @@ services:
       dockerfile: Dockerfile
     container_name: scheduler-service
     init: true
+    restart: unless-stopped
     depends_on:
       rabbitmq:
         condition: service_healthy
@@ -80,6 +81,7 @@ services:
       context: fetcher
       dockerfile: Dockerfile
     container_name: fetcher-service
+    restart: unless-stopped
     depends_on:
       minio:
         condition: service_started
@@ -96,6 +98,7 @@ services:
       context: thumbnail_processor
       dockerfile: Dockerfile
     container_name: thumbnail-processor-service
+    restart: unless-stopped
     depends_on:
       minio:
         condition: service_started
@@ -112,6 +115,7 @@ services:
       context: metadata_processor
       dockerfile: Dockerfile
     container_name: metadata-processor-service
+    restart: unless-stopped
     depends_on:
       minio:
         condition: service_started
@@ -130,6 +134,7 @@ services:
       context: notifier
       dockerfile: Dockerfile
     container_name: notifier-service
+    restart: unless-stopped
     depends_on:
       minio:
         condition: service_started
@@ -146,6 +151,7 @@ services:
       context: backend
       dockerfile: Dockerfile
     container_name: backend
+    restart: unless-stopped
     depends_on:
       postgres:
         condition: service_started
