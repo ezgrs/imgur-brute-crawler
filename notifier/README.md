@@ -48,7 +48,7 @@ To build the executable distribution JAR:
 
 The resulting fat JAR is generated under:
 
-```text id="z4c8qn"
+```text
 app/build/libs/
 ```
 
@@ -62,7 +62,7 @@ The notifier needs access to RabbitMQ, MinIO, and an SMTP server.
 
 Set the following environment variables before starting the application:
 
-```text id="r9x2mv"
+```text
 RABBITMQ_ROOT_USERNAME
 RABBITMQ_ROOT_PASSWORD
 
@@ -78,13 +78,13 @@ SMTP_FROM
 
 The service expects RabbitMQ at:
 
-```text id="d1w6ks"
+```text
 rabbitmq:5672
 ```
 
 and MinIO at:
 
-```text id="h8q3nc"
+```text
 http://minio:9000
 ```
 
@@ -104,13 +104,13 @@ The image itself is attached to the email using the content type reported by obj
 
 The notifier consumes from:
 
-```text id="p6v2jd"
+```text
 image.saved.notifier
 ```
 
 Messages are expected to contain an `image_id`:
 
-```json id="w3k7sf"
+```json
 {
   "image_id": "abc1234"
 }
@@ -124,7 +124,7 @@ The consumer uses automatic acknowledgement, so once RabbitMQ delivers the messa
 
 Start the application with:
 
-```bash id="c9m4xt"
+```bash
 ./gradlew :app:run
 ```
 
@@ -136,18 +136,18 @@ For a local setup, make sure RabbitMQ, MinIO, and the SMTP server are reachable 
 
 Format the Kotlin code with:
 
-```bash id="y7p3qk"
+```bash
 ./gradlew ktlintFormat
 ```
 
 Check formatting without modifying files:
 
-```bash id="e2w8mc"
+```bash
 ./gradlew ktlintCheck
 ```
 
-Run the check as part of the normal verification lifecycle with:
+Make sure the Kotlin code compiles:
 
-```bash id="u5r9vn"
-./gradlew check
+```bash
+./gradlew compileKotlin
 ```
