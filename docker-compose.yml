@@ -164,6 +164,22 @@ services:
     networks:
       - app
 
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+
+    ports:
+      - "${DOCKER_FRONTEND_PORT:-80}:80"
+
+    networks:
+      - app
+
   loki:
     image: grafana/loki:3.7.0
     command:
