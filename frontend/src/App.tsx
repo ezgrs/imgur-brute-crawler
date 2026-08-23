@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import type React from "react"
 import {
   AlertCircle,
@@ -47,10 +47,12 @@ export default function ImageGallery() {
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
   const [randomLoading, setRandomLoading] = useState(false)
+  const [imageNavigationLoading, setImageNavigationLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
   const [selectionSource, setSelectionSource] =
     useState<SelectionSource>("gallery")
+  const imageNavigationLocked = useRef(false)
 
   const fetchImages = async (pageNumber: number) => {
     setLoading(true)
@@ -151,6 +153,10 @@ export default function ImageGallery() {
   )
 
   const navigateSelectedImage = async (direction: "previous" | "next") => {
+    if (imageNavigationLocked.current) {
+      return
+    }
+
     if (
       !data ||
       !selectedImage ||
@@ -160,40 +166,50 @@ export default function ImageGallery() {
       return
     }
 
-    if (direction === "previous") {
-      if (selectedIndex > 0) {
-        setSelectedImage(data.content[selectedIndex - 1])
+    imageNavigationLocked.current = true
+    setImageNavigationLoading(true)
+
+    try {
+      if (direction === "previous") {
+        if (selectedIndex > 0) {
+          setSelectedImage(data.content[selectedIndex - 1])
+          setSelectionSource("gallery")
+          return
+        }
+
+        if (!data.first) {
+          const previousPage = await fetchImages(data.number - 1)
+          const previousImage = previousPage?.content.at(-1)
+
+          if (previousImage) {
+            setSelectionSource("gallery")
+            setSelectedImage(previousImage)
+          }
+        }
+
+        return
+      }
+
+      if (selectedIndex < data.content.length - 1) {
+        setSelectedImage(data.content[selectedIndex + 1])
         setSelectionSource("gallery")
         return
       }
 
-      if (!data.first) {
-        const previousPage = await fetchImages(data.number - 1)
-        const previousImage = previousPage?.content.at(-1)
+      if (!data.last) {
+        const nextPage = await fetchImages(data.number + 1)
+        const nextImage = nextPage?.content[0]
 
-        if (previousImage) {
+        if (nextImage) {
           setSelectionSource("gallery")
-          setSelectedImage(previousImage)
+          setSelectedImage(nextImage)
         }
       }
-
-      return
-    }
-
-    if (selectedIndex < data.content.length - 1) {
-      setSelectedImage(data.content[selectedIndex + 1])
-      setSelectionSource("gallery")
-      return
-    }
-
-    if (!data.last) {
-      const nextPage = await fetchImages(data.number + 1)
-      const nextImage = nextPage?.content[0]
-
-      if (nextImage) {
-        setSelectionSource("gallery")
-        setSelectedImage(nextImage)
-      }
+    } finally {
+      window.setTimeout(() => {
+        imageNavigationLocked.current = false
+        setImageNavigationLoading(false)
+      }, 120)
     }
   }
 
@@ -316,7 +332,7 @@ export default function ImageGallery() {
           onNext={() => navigateSelectedImage("next")}
           canPrevious={canOpenPrevious}
           canNext={canOpenNext}
-          navigating={loading || randomLoading}
+          navigating={loading || randomLoading || imageNavigationLoading}
           randomLoading={randomLoading}
           source={selectionSource}
         />
