@@ -1,75 +1,103 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The web application for Imgurdex.
 
-Currently, two official plugins are available:
+It provides a responsive gallery for browsing, viewing, downloading, and linking images. Built with React, TypeScript, and Vite, because apparently displaying pictures required an entire software ecosystem.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+There are thumbnails, pagination, random images, keyboard navigation, downloads, direct links, and enough UI polish to make it look like someone knew what they were doing.
 
-## React Compiler
+## Screenshots
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+<img width="2560" height="1600" alt="192 168 18 34_(Nest Hub Max)" src="https://github.com/user-attachments/assets/c67c6e75-2db5-45ad-8f60-4b28c1db0c4e" />
+<img width="2560" height="1600" alt="192 168 18 34_(Nest Hub Max) (1)" src="https://github.com/user-attachments/assets/6095044a-5e2e-43af-a01a-2c92cf6f0d54" />
+<img width="2560" height="1600" alt="192 168 18 34_(Nest Hub Max) (2)" src="https://github.com/user-attachments/assets/4cafa9d3-fb7f-421e-a579-e3c998927adb" />
 
-## Expanding the ESLint configuration
+<sub>These are my images, collected through Imgurdex over the years. I’d happily hand them over to you lot, but hosting the damn things costs money, and I am, regrettably, a poor guy with a database full of whatever the RNG threw at me.</sub>
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Prerequisites
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Node.js
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+The project requires **Node.js**.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Install dependencies with:
 
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+That's it. No ritual sacrifice. No twelve-step ceremony. `npm install` and we move on with our lives.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Dependencies
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The application is built with:
 
+* **React 19**: making buttons react since 2013.
+* **TypeScript**: because discovering problems before production is considered good manners.
+* **Vite**: fast development tooling, with considerably less drama than its name suggests.
+* **Tailwind CSS**: CSS, except the class names have unionised.
+* **shadcn/ui**: reusable UI components without the feeling of having rented your entire frontend from a corporation.
+* **Lucide React**: icons, because drawing an arrow yourself would be an irresponsible use of engineering time.
+* **ESLint**: the little voice in the room asking what the hell you just did.
+
+See `package.json` for the complete dependency list. If you're the sort of person who reads dependency manifests recreationally, you'll find plenty to enjoy.
+
+## Build
+
+Build the application with:
+
+```bash
+npm run build
 ```
+
+The production build is generated in *dist/*.
+
+To preview the production build:
+
+```bash
+npm run preview
+```
+
+The build runs TypeScript and Vite. First the compiler checks whether your code has any embarrassing opinions about types; then Vite turns the survivors into a website.
+
+## Development
+
+Start the development server with:
+
+```bash
+npm run dev
+```
+
+The frontend expects the backend API and MinIO to be available through:
+
+```text
+/api
+/minio
+```
+
+The backend provides image metadata and pagination. MinIO provides the actual pixels.
+
+A sensible division of labour. The backend knows *about* the pictures; MinIO knows where the pictures are. Nobody asks the frontend to store anything, because we've all suffered enough.
+
+The application supports browsing, pagination, random images, full-size previews, downloads, direct links, and keyboard navigation. The source code contains the details. This README has better things to do.
+
+## Formatting
+
+Run ESLint with:
+
+```bash
+npm run lint
+```
+
+Build and lint before committing:
+
+```bash
+npm run lint
+npm run build
+```
+
+If both pass, congratulations: the machine has found nothing to complain about.
+
+This does **not** mean the code is perfect.
+
+It means the machines have temporarily lost the argument.
