@@ -20,8 +20,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
-const MINIO_BASE_URL = "http://192.168.18.34:9000"
-const BACKEND_URL = "http://192.168.18.34:8080"
+const MINIO_BASE_URL = "http://minio:9000"
+const BACKEND_URL = "http://backend:8080"
 const PAGE_SIZE = 24
 
 interface ImageItem {
