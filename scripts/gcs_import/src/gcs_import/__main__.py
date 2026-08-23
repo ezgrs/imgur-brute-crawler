@@ -165,9 +165,11 @@ def run(settings: Settings) -> None:
 
         log("Done")
 
+
 def main() -> None:
-    settings = Settings() # type: ignore
+    settings = Settings()  # type: ignore
     return run(settings)
+
 
 if __name__ == "__main__":
     main()
