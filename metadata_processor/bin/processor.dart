@@ -31,7 +31,7 @@ Future<Database> createDatabase({
   // Apply migrations
   final migrationResult = await connection
       .migrator(options: PsqlMigrationOptions(path: './migrations'))
-      .migrate(version: '0.1.0');
+      .migrate(version: '0.1.1');
   print(migrationResult.message);
 
   return PostgresDatabase(connection: connection);
