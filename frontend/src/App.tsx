@@ -13,6 +13,7 @@ import {
   Info,
   Maximize2,
   RefreshCw,
+  Shuffle,
   X,
 } from "lucide-react"
 
@@ -39,12 +40,17 @@ interface ApiResponse {
   last: boolean
 }
 
+type SelectionSource = "gallery" | "random"
+
 export default function ImageGallery() {
   const [data, setData] = useState<ApiResponse | null>(null)
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [randomLoading, setRandomLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
+  const [selectionSource, setSelectionSource] =
+    useState<SelectionSource>("gallery")
 
   const fetchImages = async (pageNumber: number) => {
     setLoading(true)
@@ -106,6 +112,26 @@ export default function ImageGallery() {
     }
   }
 
+  const openRandomImage = async () => {
+    setRandomLoading(true)
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/images/random`)
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}`)
+      }
+
+      const image: ImageItem = await response.json()
+      setSelectionSource("random")
+      setSelectedImage(image)
+    } catch (err) {
+      console.error("Failed to load random image:", err)
+    } finally {
+      setRandomLoading(false)
+    }
+  }
+
   const selectedIndex = data?.content.findIndex(
     (item) => item.id === selectedImage?.id,
   )
@@ -137,6 +163,7 @@ export default function ImageGallery() {
     if (direction === "previous") {
       if (selectedIndex > 0) {
         setSelectedImage(data.content[selectedIndex - 1])
+        setSelectionSource("gallery")
         return
       }
 
@@ -145,6 +172,7 @@ export default function ImageGallery() {
         const previousImage = previousPage?.content.at(-1)
 
         if (previousImage) {
+          setSelectionSource("gallery")
           setSelectedImage(previousImage)
         }
       }
@@ -154,6 +182,7 @@ export default function ImageGallery() {
 
     if (selectedIndex < data.content.length - 1) {
       setSelectedImage(data.content[selectedIndex + 1])
+      setSelectionSource("gallery")
       return
     }
 
@@ -162,6 +191,7 @@ export default function ImageGallery() {
       const nextImage = nextPage?.content[0]
 
       if (nextImage) {
+        setSelectionSource("gallery")
         setSelectedImage(nextImage)
       }
     }
@@ -202,6 +232,17 @@ export default function ImageGallery() {
               >
                 <RefreshCw className={loading ? "animate-spin" : ""} />
                 <span className="hidden sm:inline">Refresh</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openRandomImage}
+                disabled={randomLoading}
+                title="Random image"
+              >
+                <Shuffle className={randomLoading ? "animate-spin" : ""} />
+                <span className="hidden sm:inline">Random</span>
               </Button>
 
               {data && (
@@ -251,7 +292,10 @@ export default function ImageGallery() {
                   imageUrl={getImageUrl(item.id)}
                   thumbnailUrl={getThumbnailUrl(item.id)}
                   onDownload={handleDownload}
-                  onSelect={() => setSelectedImage(item)}
+                  onSelect={() => {
+                    setSelectionSource("gallery")
+                    setSelectedImage(item)
+                  }}
                 />
               ))}
             </div>
@@ -267,11 +311,14 @@ export default function ImageGallery() {
           imgurUrl={getImgurUrl(selectedImage.id)}
           onClose={() => setSelectedImage(null)}
           onDownload={handleDownload}
+          onGenerateAnother={openRandomImage}
           onPrevious={() => navigateSelectedImage("previous")}
           onNext={() => navigateSelectedImage("next")}
           canPrevious={canOpenPrevious}
           canNext={canOpenNext}
-          navigating={loading}
+          navigating={loading || randomLoading}
+          randomLoading={randomLoading}
+          source={selectionSource}
         />
       )}
     </main>
@@ -360,11 +407,14 @@ type ImageDetailsDialogProps = {
   imgurUrl: string
   onClose: () => void
   onDownload: (id: string, mimeType: string) => void
+  onGenerateAnother: () => void
   onPrevious: () => void
   onNext: () => void
   canPrevious: boolean
   canNext: boolean
   navigating: boolean
+  randomLoading: boolean
+  source: SelectionSource
 }
 
 function ImageDetailsDialog({
@@ -373,11 +423,14 @@ function ImageDetailsDialog({
   imgurUrl,
   onClose,
   onDownload,
+  onGenerateAnother,
   onPrevious,
   onNext,
   canPrevious,
   canNext,
   navigating,
+  randomLoading,
+  source,
 }: ImageDetailsDialogProps) {
   const [copied, setCopied] = useState<"direct" | "imgur" | null>(null)
   const [imageFailed, setImageFailed] = useState(false)
@@ -540,8 +593,21 @@ function ImageDetailsDialog({
                 Actions
               </p>
               <div className="grid gap-2">
+                {source === "random" && (
+                  <Button
+                    size="lg"
+                    className="h-10 justify-start rounded-md"
+                    onClick={onGenerateAnother}
+                    disabled={randomLoading}
+                  >
+                    <Shuffle className={randomLoading ? "animate-spin" : ""} />
+                    Generate another
+                  </Button>
+                )}
+
                 <Button
                   size="lg"
+                  variant={source === "random" ? "outline" : "default"}
                   className="h-10 justify-start rounded-md"
                   onClick={() => onDownload(image.id, image.mimeType)}
                 >
