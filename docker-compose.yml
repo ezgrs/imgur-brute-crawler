@@ -141,6 +141,20 @@ services:
     networks:
       - app
 
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    container_name: backend
+    depends_on:
+      postgres:
+        condition: service_started
+
+    env_file:
+      - .env
+    networks:
+      - app
+
   loki:
     image: grafana/loki:3.7.0
     command:
