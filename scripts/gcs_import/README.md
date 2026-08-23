@@ -1,23 +1,5 @@
 # Google Cloud Storage Importer
 
-* [Overview](#overview)
-* [Usage](#usage)
-    + [Setup](#setup)
-        - [Google Cloud credentials](#google-cloud-credentials)
-        - [GCS](#gcs)
-        - [MinIO](#minio)
-        - [PostgreSQL](#postgresql)
-    + [Running with Poetry](#running-with-poetry)
-    + [Running with Docker](#running-with-docker)
-    + [Output format](#output-format)
-* [Implementation](#implementation)
-    + [Image IDs](#image-ids)
-    + [Thumbnail generation](#thumbnail-generation)
-    + [A note about retries](#a-note-about-retries)
-* [TL;DR](#tldr)
-    + [With Poetry](#with-poetry)
-    + [With Docker](#with-docker)
-
 You have a pile of images sitting in a Google Cloud Storage bucket.
 
 You would like those images to exist in **Imgurdex** instead.
@@ -53,6 +35,26 @@ flowchart TD
 
 
 It is deliberately boring. Boring migration scripts are good migration scripts. Nobody wants their importer developing a personality halfway through a 40,000-image migration.
+
+## Table of contents
+
+* [Overview](#overview)
+* [Usage](#usage)
+    + [Setup](#setup)
+        - [Google Cloud credentials](#google-cloud-credentials)
+        - [GCS](#gcs)
+        - [MinIO](#minio)
+        - [PostgreSQL](#postgresql)
+    + [Running with Poetry](#running-with-poetry)
+    + [Running with Docker](#running-with-docker)
+    + [Output format](#output-format)
+* [Implementation](#implementation)
+    + [Image IDs](#image-ids)
+    + [Thumbnail generation](#thumbnail-generation)
+    + [A note about retries](#a-note-about-retries)
+* [TL;DR](#tldr)
+    + [With Poetry](#with-poetry)
+    + [With Docker](#with-docker)
 
 ## Overview
 
