@@ -211,6 +211,7 @@ services:
     depends_on:
       - loki
     networks:
+      - app
       - observability
 
   alloy:
