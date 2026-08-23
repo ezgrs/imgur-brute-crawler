@@ -216,7 +216,7 @@ docker run --rm \
 
 The credentials file is mounted read-only into the container, which is exactly what we want: the importer can read the keys, but it doesn't get to redecorate them.
 
-For this setup, note the command below mounts the credentials file into the container at */app/.credentials.json*,
+For this setup, note the command above mounts the credentials file into the container at */app/.credentials.json*,
 so your `.env` should contain:
 
 ```dotenv
@@ -239,7 +239,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/app/.credentials.json
 > 
 > If those services are somewhere else entirely, use their actual hostname or IP instead.
 
-### Output format
+### Output
 
 After a successful import, MinIO contains:
 
