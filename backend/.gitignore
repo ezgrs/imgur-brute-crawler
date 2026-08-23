@@ -73,3 +73,6 @@ secrets.yml
 .git-hooks/
 node_modules
 /.kotlin/
+
+# Gradle wrapper must be committed
+!gradle/wrapper/gradle-wrapper.jar
