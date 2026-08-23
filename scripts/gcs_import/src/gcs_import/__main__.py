@@ -76,7 +76,7 @@ def run(settings: Settings) -> None:
     gcs_bucket = gcs.bucket(settings.GCS_BUCKET_NAME)
     for blob in gcs.list_blobs(gcs_bucket):
         print("========================================")
-        image_id = pathlib.Path(blob.name).name
+        image_id = pathlib.Path(blob.name).stem
 
         log = create_log(image_id)
         log(f"Processing...")
