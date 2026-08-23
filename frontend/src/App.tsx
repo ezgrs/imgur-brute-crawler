@@ -61,9 +61,12 @@ export default function ImageGallery() {
 
       const json: ApiResponse = await response.json()
       setData(json)
+      setPage(pageNumber)
+      return json
     } catch (err) {
       console.error("Failed to load images:", err)
       setError("Unable to load images.")
+      return null
     } finally {
       setLoading(false)
     }
@@ -71,8 +74,8 @@ export default function ImageGallery() {
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchImages(page)
-  }, [page])
+    fetchImages(0)
+  }, [])
 
   const getThumbnailUrl = (id: string) => `${MINIO_BASE_URL}/thumbnails/${id}`
   const getImageUrl = (id: string) => `${MINIO_BASE_URL}/images/${id}`
@@ -100,6 +103,67 @@ export default function ImageGallery() {
       window.URL.revokeObjectURL(blobUrl)
     } catch (err) {
       console.error("Failed to download image:", err)
+    }
+  }
+
+  const selectedIndex = data?.content.findIndex(
+    (item) => item.id === selectedImage?.id,
+  )
+  const canOpenPrevious = Boolean(
+    data &&
+      selectedImage &&
+      selectedIndex !== undefined &&
+      selectedIndex >= 0 &&
+      (selectedIndex > 0 || !data.first),
+  )
+  const canOpenNext = Boolean(
+    data &&
+      selectedImage &&
+      selectedIndex !== undefined &&
+      selectedIndex >= 0 &&
+      (selectedIndex < data.content.length - 1 || !data.last),
+  )
+
+  const navigateSelectedImage = async (direction: "previous" | "next") => {
+    if (
+      !data ||
+      !selectedImage ||
+      selectedIndex === undefined ||
+      selectedIndex < 0
+    ) {
+      return
+    }
+
+    if (direction === "previous") {
+      if (selectedIndex > 0) {
+        setSelectedImage(data.content[selectedIndex - 1])
+        return
+      }
+
+      if (!data.first) {
+        const previousPage = await fetchImages(data.number - 1)
+        const previousImage = previousPage?.content.at(-1)
+
+        if (previousImage) {
+          setSelectedImage(previousImage)
+        }
+      }
+
+      return
+    }
+
+    if (selectedIndex < data.content.length - 1) {
+      setSelectedImage(data.content[selectedIndex + 1])
+      return
+    }
+
+    if (!data.last) {
+      const nextPage = await fetchImages(data.number + 1)
+      const nextImage = nextPage?.content[0]
+
+      if (nextImage) {
+        setSelectedImage(nextImage)
+      }
     }
   }
 
@@ -144,7 +208,7 @@ export default function ImageGallery() {
                 <PaginationController
                   data={data}
                   loading={loading}
-                  setPage={setPage}
+                  onPageChange={fetchImages}
                 />
               )}
             </div>
@@ -197,11 +261,17 @@ export default function ImageGallery() {
 
       {selectedImage && (
         <ImageDetailsDialog
+          key={selectedImage.id}
           image={selectedImage}
           imageUrl={getImageUrl(selectedImage.id)}
           imgurUrl={getImgurUrl(selectedImage.id)}
           onClose={() => setSelectedImage(null)}
           onDownload={handleDownload}
+          onPrevious={() => navigateSelectedImage("previous")}
+          onNext={() => navigateSelectedImage("next")}
+          canPrevious={canOpenPrevious}
+          canNext={canOpenNext}
+          navigating={loading}
         />
       )}
     </main>
@@ -237,7 +307,7 @@ function ImageTile({
           {!imageFailed ? (
             <img
               src={thumbnailUrl}
-              alt={`Imagem ${item.id}`}
+              alt={`Image ${item.id}`}
               className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
               loading="lazy"
               onError={() => setImageFailed(true)}
@@ -290,6 +360,11 @@ type ImageDetailsDialogProps = {
   imgurUrl: string
   onClose: () => void
   onDownload: (id: string, mimeType: string) => void
+  onPrevious: () => void
+  onNext: () => void
+  canPrevious: boolean
+  canNext: boolean
+  navigating: boolean
 }
 
 function ImageDetailsDialog({
@@ -298,6 +373,11 @@ function ImageDetailsDialog({
   imgurUrl,
   onClose,
   onDownload,
+  onPrevious,
+  onNext,
+  canPrevious,
+  canNext,
+  navigating,
 }: ImageDetailsDialogProps) {
   const [copied, setCopied] = useState(false)
   const [imageFailed, setImageFailed] = useState(false)
@@ -309,6 +389,16 @@ function ImageDetailsDialog({
       if (event.key === "Escape") {
         onClose()
       }
+
+      if (event.key === "ArrowLeft" && canPrevious && !navigating) {
+        event.preventDefault()
+        onPrevious()
+      }
+
+      if (event.key === "ArrowRight" && canNext && !navigating) {
+        event.preventDefault()
+        onNext()
+      }
     }
 
     document.body.style.overflow = "hidden"
@@ -318,7 +408,7 @@ function ImageDetailsDialog({
       document.body.style.overflow = ""
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [onClose])
+  }, [canNext, canPrevious, navigating, onClose, onNext, onPrevious])
 
   const copyUrl = async () => {
     try {
@@ -346,7 +436,7 @@ function ImageDetailsDialog({
           {!imageFailed ? (
             <img
               src={imageUrl}
-              alt={`Imagem ${image.id}`}
+              alt={`Image ${image.id}`}
               className="max-h-[62vh] w-full object-contain lg:max-h-[94vh]"
               onError={() => setImageFailed(true)}
             />
@@ -367,6 +457,36 @@ function ImageDetailsDialog({
           >
             <X />
           </Button>
+
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute left-3 top-1/2 size-10 -translate-y-1/2 rounded-full bg-white/95 text-neutral-950 shadow-lg hover:bg-white disabled:opacity-30 sm:left-4"
+            onClick={onPrevious}
+            disabled={!canPrevious || navigating}
+            aria-label="Previous image"
+            title="Previous image"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+
+          <Button
+            size="icon"
+            variant="secondary"
+            className="absolute right-3 top-1/2 size-10 -translate-y-1/2 rounded-full bg-white/95 text-neutral-950 shadow-lg hover:bg-white disabled:opacity-30 sm:right-4"
+            onClick={onNext}
+            disabled={!canNext || navigating}
+            aria-label="Next image"
+            title="Next image"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+
+          {navigating && (
+            <div className="absolute bottom-3 left-1/2 rounded-full bg-black/55 px-3 py-1 text-xs font-medium text-white/85 backdrop-blur-sm -translate-x-1/2">
+              Loading...
+            </div>
+          )}
         </div>
 
         <aside className="flex min-h-0 flex-col border-t border-neutral-200 bg-white lg:border-l lg:border-t-0">
@@ -405,7 +525,7 @@ function ImageDetailsDialog({
               />
               <InfoCard
                 icon={<FileImage className="h-4 w-4" />}
-                label="Tipo"
+                label="Type"
                 value={fileExtension}
               />
               <InfoCard
@@ -464,8 +584,8 @@ function ImageDetailsDialog({
                   variant="outline"
                   className="bg-white"
                   onClick={copyUrl}
-                  aria-label="Copiar URL"
-                  title="Copiar URL"
+                  aria-label="Copy URL"
+                  title="Copy URL"
                 >
                   <Copy />
                 </Button>
@@ -503,13 +623,13 @@ function InfoCard({ icon, label, value }: InfoCardProps) {
 
 type PaginationControllerProps = {
   data: ApiResponse
-  setPage: React.Dispatch<React.SetStateAction<number>>
+  onPageChange: (pageNumber: number) => Promise<ApiResponse | null>
   loading: boolean
 }
 
 function PaginationController({
   data,
-  setPage,
+  onPageChange,
   loading,
 }: PaginationControllerProps) {
   const currentPage = data.number
@@ -524,7 +644,7 @@ function PaginationController({
       <Button
         variant="outline"
         size="icon-sm"
-        onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+        onClick={() => onPageChange(Math.max(currentPage - 1, 0))}
         disabled={data.first || loading}
         aria-label="Previous page"
         title="Previous page"
@@ -539,7 +659,7 @@ function PaginationController({
       <Button
         variant="outline"
         size="icon-sm"
-        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+        onClick={() => onPageChange(Math.min(currentPage + 1, totalPages - 1))}
         disabled={data.last || loading}
         aria-label="Next page"
         title="Next page"
