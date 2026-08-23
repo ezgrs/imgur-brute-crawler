@@ -118,7 +118,7 @@ def run(settings: Settings) -> None:
             Metadata={"original-created-at": blob.time_created.isoformat()},
         )
 
-        thumbnail_bytes = create_thumbnail(image_bytes)
+        thumbnail_bytes = create_thumbnail(image)
         log("Uploading thumbnail to S3...")
         s3.put_object(
             Bucket="thumbnails",
