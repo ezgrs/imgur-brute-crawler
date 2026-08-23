@@ -4,12 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.sql.Types;
+import org.hibernate.annotations.JdbcTypeCode;
 
 @Entity
 @Table(name = "images")
 public class Image {
     @Id
     @Column(length = 7, nullable = false)
+    @JdbcTypeCode(Types.CHAR)
     private String id;
 
     @Column(nullable = false)
@@ -25,6 +28,7 @@ public class Image {
     private String mimeType;
 
     @Column(length = 64, nullable = false)
+    @JdbcTypeCode(Types.CHAR)
     private String hash;
 
     protected Image() {}
