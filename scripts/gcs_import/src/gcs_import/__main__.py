@@ -13,6 +13,8 @@ import PIL.ImageOps
 
 
 class Settings(pydantic_settings.BaseSettings):
+    model_config = pydantic_settings.SettingsConfigDict(env_file=".env")
+
     GCS_BUCKET_NAME: str
 
     MINIO_HOST: str
