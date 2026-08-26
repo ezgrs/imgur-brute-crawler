@@ -204,17 +204,39 @@ Build the image:
 docker build -t gcs-migrator .
 ```
 
+If Imgurdex is already running from Docker Compose, find its `app` network name:
+
+```
+docker network ls
+```
+```text
+NETWORK ID     NAME                     DRIVER    SCOPE
+000000000000   imgurdex_app             bridge    local
+000000000001   imgurdex_observability   bridge    local
+```
+
+And change your `.env` to point the host variables to their containers names:
+
+```
+MINIO_HOST=minio
+MINIO_PORT=9000
+
+POSTGRES_HOST=postgres
+POSTGRES_PORT=5432
+```
+
 Then run it:
 
 ```bash
 docker run --rm \
-  --add-host=host.docker.internal:host-gateway \
+  --network imgurdex_app \
   --env-file .env \
   -v "./.credentials.json:/app/.credentials.json:ro" \
   gcs-migrator
 ```
 
-The credentials file is mounted read-only into the container, which is exactly what we want: the importer can read the keys, but it doesn't get to redecorate them.
+The credentials file is mounted read-only into the container, which is exactly what we want:
+the importer can read the keys, but it doesn't get to redecorate them.
 
 For this setup, note the command above mounts the credentials file into the container at */app/.credentials.json*,
 so your `.env` should contain:
@@ -222,22 +244,6 @@ so your `.env` should contain:
 ```dotenv
 GOOGLE_APPLICATION_CREDENTIALS=/app/.credentials.json
 ```
-
-
-> **Why `host.docker.internal`?**
-> 
-> If MinIO or PostgreSQL are running on your host machine rather than inside Docker, the container needs a way to reach them.
-> 
-> That's what `--add-host` is doing.
-> 
-> In that setup, your `.env` can use:
-> 
-> ```dotenv
-> MINIO_HOST=host.docker.internal
-> POSTGRES_HOST=host.docker.internal
-> ```
-> 
-> If those services are somewhere else entirely, use their actual hostname or IP instead.
 
 ### Output
 
@@ -362,12 +368,15 @@ poetry run python -m src.gcs_import
 
 ```bash
 cp .env.example .env
-# fill in .env
+# Fill in .env
 
 docker build -t gcs-migrator .
 
+docker network ls
+# Find the running Imgurdex app network
+
 docker run --rm \
-  --add-host=host.docker.internal:host-gateway \
+  --network imgurdex_app \
   --env-file .env \
   -v "./.credentials.json:/app/.credentials.json:ro" \
   gcs-migrator
